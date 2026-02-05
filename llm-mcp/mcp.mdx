@@ -11,11 +11,11 @@ Conecte a documentação e endpoints da API ImperiumPay Gateway a ferramentas de
 
 ## O que é MCP?
 
-O Model Context Protocol (MCP) é um protocolo aberto que cria conexões padronizadas entre aplicações de IA e serviços externos. O NextPagamentos disponibiliza um servidor MCP público que permite que ferramentas de IA como Claude, Cursor, Goose e outras se conectem diretamente à documentação da API ImperiumPay Gateway, facilitando a integração e o desenvolvimento.
+O Model Context Protocol (MCP) é um protocolo aberto que cria conexões padronizadas entre aplicações de IA e serviços externos. O ImperiumPay disponibiliza um servidor MCP público que permite que ferramentas de IA como Claude, Cursor, Goose e outras se conectem diretamente à documentação da API ImperiumPay Gateway, facilitando a integração e o desenvolvimento.
 
 ## Como funciona
 
-O servidor MCP do NextPagamentos permite que ferramentas de IA acessem a documentação completa da API ImperiumPay Gateway em tempo real. Quando você conecta o servidor MCP em sua ferramenta de IA preferida, ela pode:
+O servidor MCP do ImperiumPay permite que ferramentas de IA acessem a documentação completa da API ImperiumPay Gateway em tempo real. Quando você conecta o servidor MCP em sua ferramenta de IA preferida, ela pode:
 
 - Pesquisar proativamente a documentação da ImperiumPay enquanto gera respostas, sem necessidade de solicitação explícita
 - Determinar automaticamente quando usar a documentação da ImperiumPay com base no contexto da conversa
@@ -26,11 +26,11 @@ O servidor MCP do NextPagamentos permite que ferramentas de IA acessem a documen
 
 ## URL do servidor MCP
 
-O servidor MCP do NextPagamentos está disponível publicamente na seguinte URL:
+O servidor MCP do ImperiumPay está disponível publicamente na seguinte URL:
 
 <CodeGroup>
 ```text URL do servidor MCP
-https://docs.nextpagamentos.io/mcp
+https://docs.imperiumpay.com.br/mcp
 ```
 </CodeGroup>
 
@@ -54,7 +54,7 @@ Para usar o servidor MCP da ImperiumPay Gateway em suas ferramentas de IA favori
     2. Selecione **Add custom connector**
     3. Adicione o servidor MCP da ImperiumPay:
        - **Name**: `ImperiumPay Gateway`
-       - **URL**: `https://docs.nextpagamentos.io/mcp`
+       - **URL**: `https://docs.imperiumpay.com.br/mcp`
     4. Selecione **Add**
 
     ### Usar no chat
@@ -74,7 +74,7 @@ Para usar o servidor MCP da ImperiumPay Gateway em suas ferramentas de IA favori
     Execute o seguinte comando para adicionar o servidor MCP da ImperiumPay:
 
     ```bash
-    claude mcp add --transport http ImperiumPayGateway https://docs.nextpagamentos.io/mcp
+    claude mcp add --transport http ImperiumPayGateway https://docs.imperiumpay.com.br/mcp
     ```
 
     ### Testar a conexão
@@ -100,7 +100,7 @@ Para usar o servidor MCP da ImperiumPay Gateway em suas ferramentas de IA favori
     {
       "mcpServers": {
         "ImperiumPayGateway": {
-          "url": "https://docs.nextpagamentos.io/mcp"
+          "url": "https://docs.imperiumpay.com.br/mcp"
         }
       }
     }
@@ -126,7 +126,7 @@ Para usar o servidor MCP da ImperiumPay Gateway em suas ferramentas de IA favori
       "servers": {
         "ImperiumPayGateway": {
           "type": "http",
-          "url": "https://docs.nextpagamentos.io/mcp"
+          "url": "https://docs.imperiumpay.com.br/mcp"
         }
       }
     }
