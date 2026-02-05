@@ -3,8 +3,8 @@
   "theme": "quill",
   "colors": {
     "primary": "#9F7032",
-    "light": "#07C983",
-    "dark": "#0A6B52",
+    "light": "#9F7032",
+    "dark": "#9F7032",
     "background": {
       "dark": "#0F1419"
     }
