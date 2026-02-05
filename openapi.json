@@ -1,0 +1,1021 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ImperiumPay API",
+    "description": "API pública do ImperiumPay Gateway para processar pagamentos e gerenciar transações",
+    "version": "1.0.0",
+    "contact": {
+      "name": "ImperiumPay Support",
+      "url": "https://imperiumpay.com.br"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.imperiumpay.com.br",
+      "description": "Servidor de Produção"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": [],
+      "ApiSecretAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Public-Key",
+        "description": "Chave pública da API"
+      },
+      "ApiSecretAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Private-Key",
+        "description": "Chave privada da API"
+      }
+    },
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome completo do cliente"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email do cliente"
+          },
+          "document": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["cpf", "cnpj"],
+                "description": "Tipo do documento"
+              },
+              "number": {
+                "type": "string",
+                "description": "Número do documento"
+              }
+            }
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefone no formato 11999999999"
+          }
+        }
+      },
+      "Item": {
+        "type": "object",
+        "required": ["title", "unitPrice", "quantity", "tangible"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Nome do produto"
+          },
+          "unitPrice": {
+            "type": "integer",
+            "description": "Preço unitário em centavos"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Quantidade do item"
+          },
+          "tangible": {
+            "type": "boolean",
+            "description": "Se o item é físico (true) ou digital (false)"
+          },
+          "productId": {
+            "type": "integer",
+            "description": "ID do produto"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID customizado do item"
+          }
+        }
+      },
+      "Card": {
+        "type": "object",
+        "required": ["number", "holderName", "expirationMonth", "expirationYear", "cvv"],
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "Número do cartão"
+          },
+          "holderName": {
+            "type": "string",
+            "description": "Nome do portador do cartão"
+          },
+          "expirationMonth": {
+            "type": "string",
+            "description": "Mês de expiração (MM)"
+          },
+          "expirationYear": {
+            "type": "string",
+            "description": "Ano de expiração (YYYY)"
+          },
+          "cvv": {
+            "type": "string",
+            "description": "CVV do cartão"
+          }
+        }
+      },
+      "Shipping": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "streetNumber": {
+            "type": "string"
+          },
+          "complement": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "integer",
+            "description": "Saldo disponível em centavos"
+          },
+          "blocked": {
+            "type": "integer",
+            "description": "Saldo bloqueado em centavos"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Saldo total em centavos"
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDENTE", "PAGO", "CANCELADO", "RECUSADO", "ESTORNADO", "FALHA", "EM_PROCESSAMENTO", "CHARGEBACK", "MED"]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "netAmount": {
+            "type": "number"
+          },
+          "systemFee": {
+            "type": "number"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": ["CREDIT_CARD", "DEBIT_CARD", "BOLETO", "PIX", "TRANSFER"]
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "errorType": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/public/balance": {
+      "get": {
+        "summary": "Obter Saldo Disponível",
+        "description": "Obtém o saldo disponível, bloqueado e total da sua conta",
+        "operationId": "getBalance",
+        "tags": ["Balance"],
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "ApiSecretAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saldo obtido com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Balance"
+                },
+                "example": {
+                  "available": 3153900,
+                  "blocked": 0,
+                  "total": 2653900
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Não autorizado",
+                  "message": "Autenticação necessária. Verifique suas chaves de API."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales": {
+      "post": {
+        "summary": "Criar Transação",
+        "description": "Crie uma nova transação (venda) na plataforma usando PIX, Cartão de Crédito, Cartão de Débito ou Boleto",
+        "operationId": "createSale",
+        "tags": ["Transactions"],
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "ApiSecretAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "paymentMethod", "customer", "items"],
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "description": "Valor da transação em centavos (ex: 10000 = R$ 100,00)"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": ["CREDIT_CARD", "DEBIT_CARD", "BOLETO", "PIX", "TRANSFER"],
+                    "description": "Método de pagamento"
+                  },
+                  "customer": {
+                    "$ref": "#/components/schemas/Customer"
+                  },
+                  "card": {
+                    "$ref": "#/components/schemas/Card"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Item"
+                    }
+                  },
+                  "shipping": {
+                    "$ref": "#/components/schemas/Shipping"
+                  },
+                  "installments": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 12
+                      }
+                    }
+                  },
+                  "postbackUrl": {
+                    "type": "string",
+                    "description": "URL para receber notificações de mudança de status"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "Dados adicionais da venda"
+                  }
+                }
+              },
+              "examples": {
+                "pix_digital": {
+                  "summary": "PIX - Produto Digital",
+                  "value": {
+                    "amount": 5000,
+                    "paymentMethod": "PIX",
+                    "customer": {
+                      "name": "João Silva Santos",
+                      "email": "joao.silva@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "12345678900"
+                      },
+                      "phone": "11999999999"
+                    },
+                    "items": [
+                      {
+                        "title": "Produto Digital - Assinatura Premium",
+                        "unitPrice": 5000,
+                        "quantity": 1,
+                        "tangible": false
+                      }
+                    ],
+                    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao"
+                  }
+                },
+                "pix_physical": {
+                  "summary": "PIX - Produto Físico",
+                  "value": {
+                    "amount": 15000,
+                    "paymentMethod": "PIX",
+                    "customer": {
+                      "name": "Maria Oliveira Costa",
+                      "email": "maria.oliveira@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "98765432100"
+                      },
+                      "phone": "11988887777"
+                    },
+                    "items": [
+                      {
+                        "title": "Notebook Dell Inspiron 15",
+                        "unitPrice": 15000,
+                        "quantity": 1,
+                        "tangible": true,
+                        "productId": 12345
+                      }
+                    ],
+                    "shipping": {
+                      "street": "Rua das Flores",
+                      "streetNumber": "123",
+                      "complement": "Apto 45",
+                      "zipCode": "01310100",
+                      "neighborhood": "Bela Vista",
+                      "city": "São Paulo",
+                      "state": "SP",
+                      "country": "BR"
+                    },
+                    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao"
+                  }
+                },
+                "credit_card_installments": {
+                  "summary": "Cartão de Crédito - Parcelado",
+                  "value": {
+                    "amount": 120000,
+                    "paymentMethod": "CREDIT_CARD",
+                    "installments": {
+                      "number": 12
+                    },
+                    "customer": {
+                      "name": "Carlos Eduardo Pereira",
+                      "email": "carlos.pereira@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "11122233344"
+                      },
+                      "phone": "11977776666"
+                    },
+                    "card": {
+                      "number": "4111111111111111",
+                      "holderName": "CARLOS E PEREIRA",
+                      "expirationMonth": "12",
+                      "expirationYear": "2025",
+                      "cvv": "123"
+                    },
+                    "items": [
+                      {
+                        "title": "Smart TV 55 polegadas",
+                        "unitPrice": 120000,
+                        "quantity": 1,
+                        "tangible": true,
+                        "productId": 67890
+                      }
+                    ],
+                    "shipping": {
+                      "street": "Avenida Paulista",
+                      "streetNumber": "1000",
+                      "complement": "Sala 200",
+                      "zipCode": "01310100",
+                      "neighborhood": "Bela Vista",
+                      "city": "São Paulo",
+                      "state": "SP",
+                      "country": "BR"
+                    },
+                    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao",
+                    "metadata": {
+                      "order_id": "ORD-2024-001",
+                      "campaign": "black_friday"
+                    }
+                  }
+                },
+                "credit_card_single": {
+                  "summary": "Cartão de Crédito - À Vista",
+                  "value": {
+                    "amount": 29900,
+                    "paymentMethod": "CREDIT_CARD",
+                    "installments": {
+                      "number": 1
+                    },
+                    "customer": {
+                      "name": "Ana Paula Rodrigues",
+                      "email": "ana.rodrigues@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "55566677788"
+                      },
+                      "phone": "11966665555"
+                    },
+                    "card": {
+                      "number": "5555555555554444",
+                      "holderName": "ANA P RODRIGUES",
+                      "expirationMonth": "06",
+                      "expirationYear": "2026",
+                      "cvv": "456"
+                    },
+                    "items": [
+                      {
+                        "title": "Curso Online - Marketing Digital",
+                        "unitPrice": 29900,
+                        "quantity": 1,
+                        "tangible": false
+                      }
+                    ],
+                    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao"
+                  }
+                },
+                "debit_card": {
+                  "summary": "Cartão de Débito",
+                  "value": {
+                    "amount": 8500,
+                    "paymentMethod": "DEBIT_CARD",
+                    "customer": {
+                      "name": "Pedro Henrique Santos",
+                      "email": "pedro.santos@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "33344455566"
+                      },
+                      "phone": "11955554444"
+                    },
+                    "card": {
+                      "number": "4111111111111111",
+                      "holderName": "PEDRO H SANTOS",
+                      "expirationMonth": "03",
+                      "expirationYear": "2027",
+                      "cvv": "789"
+                    },
+                    "items": [
+                      {
+                        "title": "Fone de Ouvido Bluetooth",
+                        "unitPrice": 8500,
+                        "quantity": 1,
+                        "tangible": true
+                      }
+                    ],
+                    "shipping": {
+                      "street": "Rua Augusta",
+                      "streetNumber": "500",
+                      "zipCode": "01305000",
+                      "neighborhood": "Consolação",
+                      "city": "São Paulo",
+                      "state": "SP",
+                      "country": "BR"
+                    }
+                  }
+                },
+                "boleto": {
+                  "summary": "Boleto Bancário",
+                  "value": {
+                    "amount": 45000,
+                    "paymentMethod": "BOLETO",
+                    "customer": {
+                      "name": "Roberto Silva Oliveira",
+                      "email": "roberto.oliveira@exemplo.com.br",
+                      "document": {
+                        "type": "cpf",
+                        "number": "77788899900"
+                      },
+                      "phone": "11944443333"
+                    },
+                    "items": [
+                      {
+                        "title": "Cadeira Gamer Profissional",
+                        "unitPrice": 45000,
+                        "quantity": 1,
+                        "tangible": true,
+                        "productId": 11111
+                      }
+                    ],
+                    "shipping": {
+                      "street": "Rua Oscar Freire",
+                      "streetNumber": "200",
+                      "complement": "Casa",
+                      "zipCode": "01426000",
+                      "neighborhood": "Jardins",
+                      "city": "São Paulo",
+                      "state": "SP",
+                      "country": "BR"
+                    },
+                    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Venda criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "sale": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "amount": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "paymentMethod": {
+                          "type": "string"
+                        },
+                        "customer": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "document": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "payment": {
+                          "type": "object",
+                          "properties": {
+                            "method": {
+                              "type": "string"
+                            },
+                            "installments": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "key": {
+                                  "type": "string"
+                                },
+                                "qrCodeBase64": {
+                                  "type": "string"
+                                },
+                                "expiresAt": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              }
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "lastDigits": {
+                                  "type": "string"
+                                },
+                                "brand": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "shipping": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "pix_pendente": {
+                    "summary": "PIX Pendente",
+                    "value": {
+                      "message": "Venda criada com sucesso",
+                      "sale": {
+                        "id": 2486,
+                        "amount": "5000",
+                        "status": "PENDENTE",
+                        "paymentMethod": "PIX",
+                        "customer": {
+                          "name": "João Silva Santos",
+                          "email": "joao.santos@example.com",
+                          "document": "14793766633",
+                          "phone": "5511943034718"
+                        },
+                        "payment": {
+                          "method": "PIX",
+                          "installments": null,
+                          "pix": {
+                            "key": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix.sejaefi.com.br/v2/e3c7c60f73e44469a1c7a628970b1bd45204000053039865802BR5905EFISA6008SAOPAULO62070503***6304481B",
+                            "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAADkCAYAAACIV4iNAAAAAklEQVR4AewaftIAAAxhSURBVO3BQW4s...",
+                            "expiresAt": null
+                          }
+                        },
+                        "shipping": null,
+                        "createdAt": "2025-12-20T05:55:39.372Z"
+                      }
+                    }
+                  },
+                  "cartao_pago": {
+                    "summary": "Cartão de Crédito Pago",
+                    "value": {
+                      "message": "Venda criada com sucesso",
+                      "sale": {
+                        "id": 2489,
+                        "amount": "2000",
+                        "status": "PAGO",
+                        "paymentMethod": "CREDIT_CARD",
+                        "customer": {
+                          "name": "João Silva Santos",
+                          "email": "joao.santos@example.com",
+                          "document": "14793766633",
+                          "phone": "119943034718"
+                        },
+                        "payment": {
+                          "method": "CREDIT_CARD",
+                          "installments": null,
+                          "card": {
+                            "lastDigits": "1111",
+                            "brand": "VISA"
+                          }
+                        },
+                        "shipping": "{\"street\":\"Rua das Flores\",\"streetNumber\":\"123\",\"complement\":\"Apartamento 45\",\"neighborhood\":\"Jardim Paulista\",\"city\":\"São Paulo\",\"state\":\"SP\",\"zipCode\":\"04567010\",\"country\":\"br\"}",
+                        "createdAt": "2025-12-20T16:19:58.176Z"
+                      }
+                    }
+                  },
+                  "cartao_recusado": {
+                    "summary": "Cartão de Crédito Recusado",
+                    "value": {
+                      "message": "Venda criada com sucesso",
+                      "sale": {
+                        "id": 2490,
+                        "amount": "2000",
+                        "status": "RECUSADO",
+                        "paymentMethod": "CREDIT_CARD",
+                        "customer": {
+                          "name": "João Silva Santos",
+                          "email": "joao.santos@example.com",
+                          "document": "14793766633",
+                          "phone": "119943034718"
+                        },
+                        "payment": {
+                          "method": "CREDIT_CARD",
+                          "installments": null,
+                          "card": {
+                            "lastDigits": "0002",
+                            "brand": "VISA"
+                          }
+                        },
+                        "shipping": "{\"street\":\"Rua das Flores\",\"streetNumber\":\"123\",\"complement\":\"Apartamento 45\",\"neighborhood\":\"Jardim Paulista\",\"city\":\"São Paulo\",\"state\":\"SP\",\"zipCode\":\"04567010\",\"country\":\"br\"}",
+                        "createdAt": "2025-12-20T16:22:43.336Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/{id}": {
+      "get": {
+        "summary": "Buscar Transação",
+        "description": "Recupera os detalhes de uma transação específica usando o ID da venda",
+        "operationId": "getTransaction",
+        "tags": ["Transactions"],
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "ApiSecretAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID da venda",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transação encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transação não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/cashout": {
+      "post": {
+        "summary": "Criar Transferência",
+        "description": "Solicita um saque (cashout) do seu saldo disponível para uma chave PIX",
+        "operationId": "createCashout",
+        "tags": ["Transfers"],
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "ApiSecretAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "pixKey"],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "description": "Valor do cashout em reais (mínimo: R$ 100,00)",
+                    "minimum": 100
+                  },
+                  "pixKey": {
+                    "type": "string",
+                    "description": "Chave PIX para recebimento",
+                    "minLength": 8,
+                    "maxLength": 77
+                  },
+                  "pixKeyType": {
+                    "type": "string",
+                    "enum": ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"],
+                    "description": "Tipo da chave PIX",
+                    "default": "CPF"
+                  }
+                }
+              },
+              "example": {
+                "amount": 100.00,
+                "pixKey": "11999999999",
+                "pixKeyType": "PHONE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cashout criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "amount": {
+                      "type": "string"
+                    },
+                    "netAmount": {
+                      "type": "string"
+                    },
+                    "pixKey": {
+                      "type": "string"
+                    },
+                    "pixKeyType": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "fees": {
+                      "type": "object",
+                      "properties": {
+                        "fixed": {
+                          "type": "string"
+                        },
+                        "variable": {
+                          "type": "string"
+                        },
+                        "total": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Transferência não permitida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Saldo insuficiente ou regras de negócio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Balance",
+      "description": "Operações relacionadas ao saldo da conta"
+    },
+    {
+      "name": "Transactions",
+      "description": "Operações relacionadas a transações e vendas"
+    },
+    {
+      "name": "Transfers",
+      "description": "Operações relacionadas a transferências e saques"
+    }
+  ]
+}

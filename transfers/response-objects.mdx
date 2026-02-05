@@ -1,0 +1,125 @@
+---
+title: Objetos de Resposta
+description: Estrutura dos objetos retornados pelas APIs de transferências
+---
+
+## Objeto Withdrawal (Criar Transferência)
+
+Retornado pelo endpoint `POST /api/public/cashout`:
+
+```json
+{
+  "id": 12345,
+  "amount": "100.00",
+  "netAmount": "95.00",
+  "pixKey": "11999999999",
+  "pixKeyType": "PHONE",
+  "status": "PENDING",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "fees": {
+    "fixed": "2.00",
+    "variable": "3.00",
+    "total": "5.00"
+  }
+}
+```
+
+## Objeto Withdrawal (Buscar Transferência)
+
+Retornado pelo endpoint `GET /api/public/cashout/{id}`:
+
+```json
+{
+  "id": 12345,
+  "amount": "100.00",
+  "netAmount": "95.00",
+  "pixKey": "11999999999",
+  "pixKeyType": "PHONE",
+  "status": "PENDING",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z",
+  "fees": {
+    "fixed": "2.00",
+    "variable": "3.00",
+    "total": "5.00"
+  }
+}
+```
+
+### Campos
+
+<ParamField body="id" type="integer" required>
+  ID único da transferência
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Valor bruto da transferência em reais (formato string)
+</ParamField>
+
+<ParamField body="netAmount" type="string" required>
+  Valor líquido após taxas em reais (formato string)
+</ParamField>
+
+<ParamField body="pixKey" type="string" required>
+  Chave PIX para recebimento
+</ParamField>
+
+<ParamField body="pixKeyType" type="string" required>
+  Tipo da chave PIX utilizada. Valores possíveis: `CPF`, `CNPJ`, `EMAIL`, `PHONE`, `RANDOM`
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status da transferência. Valores possíveis: `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`, `CANCELLED`
+</ParamField>
+
+<ParamField body="createdAt" type="string" required>
+  Data de criação da transferência (ISO 8601)
+</ParamField>
+
+<ParamField body="updatedAt" type="string">
+  Data da última atualização da transferência (ISO 8601). Apenas no endpoint de busca.
+</ParamField>
+
+<ParamField body="fees" type="object" required>
+  Detalhamento das taxas cobradas
+</ParamField>
+
+<ParamField body="fees.fixed" type="string" required>
+  Taxa fixa em reais (formato string)
+</ParamField>
+
+<ParamField body="fees.variable" type="string" required>
+  Taxa variável em reais (formato string)
+</ParamField>
+
+<ParamField body="fees.total" type="string" required>
+  Total de taxas em reais (formato string)
+</ParamField>
+
+## Objeto de Erro
+
+Retornado em caso de erro:
+
+```json
+{
+  "message": "Saldo insuficiente para realizar o cashout",
+  "errorType": "INSUFFICIENT_BALANCE"
+}
+```
+
+### Campos de Erro
+
+<ParamField body="message" type="string" required>
+  Mensagem de erro descritiva
+</ParamField>
+
+<ParamField body="errorType" type="string">
+  Tipo do erro. Valores possíveis:
+  - `INSUFFICIENT_BALANCE` - Saldo insuficiente
+  - `API_WITHDRAWAL_DISABLED_GLOBALLY` - Cashout via API desabilitado globalmente
+  - `TRANSFER_NOT_ALLOWED` - Transferência não permitida
+  - `MINIMUM_VALUE` - Valor abaixo do mínimo permitido
+  - `MAXIMUM_VALUE` - Valor acima do máximo permitido
+  - `GENERAL_ERROR` - Erro geral
+</ParamField>
+

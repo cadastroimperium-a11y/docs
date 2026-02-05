@@ -1,0 +1,412 @@
+---
+title: "Criar Transferência"
+description: "Solicite um saque (cashout) do seu saldo disponível para uma chave PIX"
+api: "POST https://api.imperiumpay.com.br/api/public/cashout"
+---
+
+Solicita um saque (cashout) do seu saldo disponível para uma chave PIX.
+
+<Endpoint method="post" url="/api/public/cashout" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys:
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Parâmetros do Body
+
+<ParamField body="amount" type="number" required>
+  Valor do cashout em reais (ex: 100.50 = R$ 100,50). **Mínimo: R$ 100,00\*\*. Máximo: R\$ 100.000,00
+</ParamField>
+
+<ParamField body="pixKey" type="string" required>
+  Chave PIX para recebimento (entre 8 e 77 caracteres)
+</ParamField>
+
+<ParamField body="pixKeyType" type="string">
+  Tipo da chave PIX. Valores possíveis: `CPF`, `CNPJ`, `EMAIL`, `PHONE`, `RANDOM`. Padrão: `CPF`
+</ParamField>
+
+<Warning>
+  O valor mínimo para transferência é **R\$ 100,00**. Valores abaixo deste mínimo retornarão erro `TRANSFER_NOT_ALLOWED`.
+</Warning>
+
+## Exemplo de Requisição
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://api.imperiumpay.com.br/api/public/cashout \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100.00,
+    "pixKey": "11999999999",
+    "pixKeyType": "PHONE"
+  }'
+```
+
+</RequestExample>
+
+## Resposta de Sucesso
+
+<ResponseField name="id" type="integer">
+  ID do cashout
+</ResponseField>
+
+<ResponseField name="amount" type="string">
+  Valor em reais
+</ResponseField>
+
+<ResponseField name="pixKey" type="string">
+  Chave PIX
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status do cashout (PENDING, PROCESSING, etc.)
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  Data de criação (ISO 8601)
+</ResponseField>
+
+### Exemplo de Resposta
+
+<ResponseExample>
+
+```json Success - 201 Created
+{
+  "id": 12345,
+  "amount": "100.00",
+  "netAmount": "95.00",
+  "pixKey": "11999999999",
+  "pixKeyType": "PHONE",
+  "status": "PENDING",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "fees": {
+    "fixed": "2.00",
+    "variable": "3.00",
+    "total": "5.00"
+  }
+}
+```
+
+</ResponseExample>
+
+<ResponseField name="netAmount" type="string">
+  Valor líquido após taxas em reais
+</ResponseField>
+
+<ResponseField name="pixKeyType" type="string">
+  Tipo da chave PIX utilizada
+</ResponseField>
+
+<ResponseField name="fees" type="object">
+  Detalhamento das taxas cobradas
+</ResponseField>
+
+<ResponseField name="fees.fixed" type="string">
+  Taxa fixa em reais
+</ResponseField>
+
+<ResponseField name="fees.variable" type="string">
+  Taxa variável em reais
+</ResponseField>
+
+<ResponseField name="fees.total" type="string">
+  Total de taxas em reais
+</ResponseField>
+
+## Configuração de Webhooks
+
+Para receber notificações automáticas sobre mudanças de status dos saques, você precisa configurar um webhook no painel do usuário.
+
+### Como Configurar
+
+1. Acesse o painel do ImperiumPay Gateway
+2. Vá em **Menu lateral \> Integrações \> Adicionar Webhook**
+3. Configure a URL do seu webhook (ex: `https://seusite.com/webhook/cashout`)
+4. Em "Tipos de Notificação", marque **"Notificar Saques"**
+5. Salve a configuração
+
+<Warning>
+  Sem webhook configurado, você **NÃO** receberá notificações automáticas de mudança de status dos saques (PROCESSING → COMPLETED/REJECTED).
+</Warning>
+
+### Quando o Webhook é Enviado
+
+O webhook é enviado quando o status do saque muda, após o processamento do postback do provedor BaaS (Sqala, Witetec, Transfeera, etc.). As notificações são enviadas para os seguintes status:
+
+- `PROCESSING` - Saque em processamento
+- `COMPLETED` - Saque concluído com sucesso
+- `REJECTED` - Saque rejeitado
+- `CANCELLED` - Saque cancelado
+
+### Formato do Payload
+
+```json
+{
+  "id": 123,
+  "userId": 1,
+  "amount": "100.00",
+  "pixKey": "11999999999",
+  "pixKeyType": "PHONE",
+  "status": "COMPLETED",
+  "externalId": "GATEWAY-123",
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "updatedAt": "2025-01-15T10:35:00.000Z",
+  "processedAt": "2025-01-15T10:35:00.000Z",
+  "user": {
+    "id": 1,
+    "name": "João Silva",
+    "email": "joao@exemplo.com"
+  },
+  "type": "WITHDRAWAL"
+}
+```
+
+### Campos do Payload
+
+| Campo         | Tipo           | Descrição                                                                   |
+| ------------- | -------------- | --------------------------------------------------------------------------- |
+| `id`          | integer        | ID interno do saque no ImperiumPay Gateway                                      |
+| `userId`      | integer        | ID do usuário que solicitou o saque                                         |
+| `amount`      | string         | Valor do saque em reais (formato string, ex: "100.00")                      |
+| `pixKey`      | string \| null | Chave PIX utilizada para o saque                                            |
+| `pixKeyType`  | string \| null | Tipo da chave PIX (CPF, CNPJ, EMAIL, PHONE, RANDOM)                         |
+| `status`      | string         | Status atual do saque (PENDING, PROCESSING, COMPLETED, CANCELLED, REJECTED) |
+| `externalId`  | string \| null | ID externo do saque no provedor BaaS                                        |
+| `createdAt`   | string         | Data de criação do saque (ISO 8601)                                         |
+| `updatedAt`   | string         | Data da última atualização (ISO 8601)                                       |
+| `processedAt` | string \| null | Data de processamento do saque (ISO 8601)                                   |
+| `user`        | object         | Dados do usuário (id, name, email)                                          |
+| `type`        | string         | Sempre "WITHDRAWAL" para identificar o tipo de notificação                  |
+
+### Segurança
+
+<Info>
+  Webhooks permanentes de saques **não incluem assinatura HMAC**. Diferente dos postbacks por transação (que usam `X-Signature`), os webhooks permanentes são enviados sem assinatura.
+</Info>
+
+**Recomendações de segurança:**
+
+- Validar a origem usando a URL configurada
+- Usar HTTPS
+- Validar o `userId` para garantir que o saque pertence à sua conta
+- Implementar idempotência para evitar processamento duplicado
+
+### Exemplo de Implementação
+
+<CodeGroup>
+
+```javascript Node.js/Express
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhook/cashout', (req, res) => {
+  const payload = req.body;
+  
+  // Validar tipo de notificação
+  if (payload.type !== 'WITHDRAWAL') {
+    return res.status(400).json({ error: 'Tipo de notificação inválido' });
+  }
+  
+  // Validar userId (garantir que é da sua conta)
+  const expectedUserId = process.env.YOUR_USER_ID;
+  if (payload.userId !== parseInt(expectedUserId)) {
+    return res.status(403).json({ error: 'Usuário não autorizado' });
+  }
+  
+  // Processar notificação
+  console.log('Saque atualizado:', {
+    id: payload.id,
+    status: payload.status,
+    amount: payload.amount,
+    pixKey: payload.pixKey
+  });
+  
+  // Implementar lógica de negócio aqui
+  // Ex: atualizar status no seu sistema, enviar email, etc.
+  
+  // Sempre retornar 200 para confirmar recebimento
+  res.status(200).json({ success: true });
+});
+
+app.listen(3000);
+```
+
+
+```python Python/Flask
+from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+@app.route('/webhook/cashout', methods=['POST'])
+def webhook_cashout():
+    payload = request.json
+    
+    # Validar tipo de notificação
+    if payload.get('type') != 'WITHDRAWAL':
+        return jsonify({'error': 'Tipo de notificação inválido'}), 400
+    
+    # Validar userId
+    expected_user_id = int(os.environ.get('YOUR_USER_ID', 0))
+    if payload.get('userId') != expected_user_id:
+        return jsonify({'error': 'Usuário não autorizado'}), 403
+    
+    # Processar notificação
+    print(f"Saque atualizado: ID={payload['id']}, Status={payload['status']}, Amount={payload['amount']}")
+    
+    # Implementar lógica de negócio aqui
+    
+    return jsonify({'success': True}), 200
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+
+```php PHP
+<?php
+$payload = json_decode(file_get_contents('php://input'), true);
+
+// Validar tipo de notificação
+if ($payload['type'] !== 'WITHDRAWAL') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Tipo de notificação inválido']);
+    exit;
+}
+
+// Validar userId
+$expectedUserId = (int) getenv('YOUR_USER_ID');
+if ($payload['userId'] !== $expectedUserId) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Usuário não autorizado']);
+    exit;
+}
+
+// Processar notificação
+error_log("Saque atualizado: ID={$payload['id']}, Status={$payload['status']}, Amount={$payload['amount']}");
+
+// Implementar lógica de negócio aqui
+
+http_response_code(200);
+echo json_encode(['success' => true]);
+?>
+```
+
+</CodeGroup>
+
+### Boas Práticas
+
+- Sempre retorne HTTP 200 para confirmar recebimento
+- Implemente idempotência usando o campo `id` do saque
+- Valide o `userId` para garantir segurança
+- Use HTTPS para proteger os dados em trânsito
+- Implemente retry logic no seu servidor caso a notificação falhe
+- Log todas as notificações recebidas para auditoria
+
+### Diferenças entre Webhook Permanente e Postback
+
+| Característica  | Webhook Permanente                    | Postback por Transação            |
+| --------------- | ------------------------------------- | --------------------------------- |
+| Configuração    | Painel do usuário                     | Campo `postbackUrl` na criação    |
+| Assinatura HMAC | Não                                   | Sim (`X-Signature` header)        |
+| Escopo          | Todas as transações/saques do usuário | Apenas transação/saque específica |
+| Campo `type`    | Sim ("WITHDRAWAL")                    | Não                               |
+| Campo `user`    | Sim (dados do usuário)                | Não                               |
+
+## Códigos de Erro
+
+### 400 Bad Request
+
+Dados inválidos. Exemplo: valor deve ser um número válido maior que zero.
+
+<ResponseExample>
+
+```json Error - 400 Bad Request
+{
+  "message": "Dados inválidos",
+  "error": "O valor deve ser um número válido maior que zero"
+}
+```
+
+</ResponseExample>
+
+### 401 Unauthorized
+
+Não autorizado - API Key ou API Secret inválidos.
+
+<ResponseExample>
+
+```json Error - 401 Unauthorized
+{
+  "message": "Não autorizado",
+  "error": "Chaves de API inválidas ou ausentes"
+}
+```
+
+</ResponseExample>
+
+### 403 Forbidden
+
+Cashout via API desabilitado ou usuário sem permissão. Pode retornar:
+
+- `API_WITHDRAWAL_DISABLED_GLOBALLY` - Cashout via API está desabilitado para este **usuário**
+- `TRANSFER_NOT_ALLOWED` - Transferência não permitida
+
+<ResponseExample>
+
+```json Error - 403 Forbidden
+{
+  "message": "Transferência não permitida",
+  "errorType": "TRANSFER_NOT_ALLOWED"
+}
+```
+
+</ResponseExample>
+
+### 422 Unprocessable Entity
+
+Saldo insuficiente ou regras de negócio. Pode retornar:
+
+- `INSUFFICIENT_BALANCE` - Saldo insuficiente para realizar o cashout
+- `MINIMUM_VALUE` - Valor abaixo do mínimo permitido (R\$ 100,00)
+- `MAXIMUM_VALUE` - Valor acima do máximo permitido (R\$ 100.000,00)
+
+<ResponseExample>
+
+```json Error - 422 Unprocessable Entity
+{
+  "message": "Saldo insuficiente para realizar o cashout",
+  "errorType": "INSUFFICIENT_BALANCE"
+}
+```
+
+</ResponseExample>
+
+### 500 Internal Server Error
+
+Erro interno do servidor.
+
+<ResponseExample>
+
+```json Error - 500 Internal Server Error
+{
+  "message": "Erro interno do servidor",
+  "error": "Falha ao processar cashout. Tente novamente mais tarde."
+}
+```
+
+</ResponseExample>

@@ -1,0 +1,512 @@
+---
+title: Objetos de Resposta
+description: Estrutura dos objetos retornados pelas APIs de transações
+---
+
+## Objeto Transaction (Buscar Transação)
+
+Retornado pelo endpoint `GET /api/transactions/{id}`:
+
+```json
+{
+  "id": 12345,
+  "status": "PAGO",
+  "amount": 10000,
+  "netAmount": 9500,
+  "systemFee": 500,
+  "reserveAmount": 0,
+  "paymentMethod": "CREDIT_CARD",
+  "date": "2024-01-15T10:30:00.000Z",
+  "completedAt": "2024-01-15T10:31:00.000Z",
+  "customer": {
+    "name": "João Silva",
+    "email": "joao@exemplo.com",
+    "document": "12345678900",
+    "phone": "11999999999"
+  },
+  "items": [
+    {
+      "id": 1,
+      "title": "Produto de Teste",
+      "unitPrice": 10000,
+      "quantity": 1,
+      "tangible": false
+    }
+  ],
+  "pixKey": null,
+  "cardLastFour": "1234",
+  "cardBrand": "VISA",
+  "boletoCode": null,
+  "externalTransactionId": "ext_123456",
+  "installments": 1,
+  "shipping": {}
+}
+```
+
+### Campos
+
+<ParamField body="id" type="integer" required>
+  ID único da transação
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status da transação. Valores possíveis: `PENDENTE`, `PAGO`, `CANCELADO`, `RECUSADO`, `ESTORNADO`, `FALHA`, `EM_PROCESSAMENTO`, `CHARGEBACK`, `MED`
+</ParamField>
+
+<ParamField body="amount" type="number" required>
+  Valor bruto da transação em centavos (ex: 10000 = R$ 100,00)
+</ParamField>
+
+<ParamField body="netAmount" type="number">
+  Valor líquido creditado em centavos (após taxas)
+</ParamField>
+
+<ParamField body="systemFee" type="number">
+  Taxas cobradas em centavos
+</ParamField>
+
+<ParamField body="reserveAmount" type="number">
+  Valor em reserva financeira bloqueada em centavos
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`, `PIX`, `TRANSFER`
+</ParamField>
+
+<ParamField body="date" type="string" required>
+  Data de criação da transação (ISO 8601)
+</ParamField>
+
+<ParamField body="completedAt" type="string">
+  Data de conclusão do pagamento (ISO 8601). `null` se ainda não foi concluído
+</ParamField>
+
+<ParamField body="customer" type="object" required>
+  Dados do cliente
+</ParamField>
+
+<ParamField body="items" type="array" required>
+  Lista de itens da transação
+</ParamField>
+
+<ParamField body="pixKey" type="string">
+  Chave PIX gerada (apenas para pagamentos PIX)
+</ParamField>
+
+<ParamField body="cardLastFour" type="string">
+  Últimos 4 dígitos do cartão (apenas para pagamentos com cartão)
+</ParamField>
+
+<ParamField body="cardBrand" type="string">
+  Bandeira do cartão (apenas para pagamentos com cartão). Ex: `VISA`, `MASTERCARD`, `ELO`
+</ParamField>
+
+<ParamField body="boletoCode" type="string">
+  Código do boleto (apenas para pagamentos via boleto)
+</ParamField>
+
+<ParamField body="externalTransactionId" type="string">
+  ID da transação no gateway de pagamento externo
+</ParamField>
+
+<ParamField body="installments" type="integer">
+  Número de parcelas (apenas para cartão de crédito)
+</ParamField>
+
+<ParamField body="shipping" type="object">
+  Informações de entrega (apenas para produtos físicos)
+</ParamField>
+
+## Objeto Sale (Criar Transação)
+
+Retornado pelo endpoint `POST /api/sales`:
+
+```json
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 2486,
+    "amount": "5000",
+    "status": "PENDENTE",
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": "14793766633",
+      "phone": "5511943034718"
+    },
+    "payment": {
+      "method": "PIX",
+      "installments": null,
+      "pix": {
+        "key": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix.sejaefi.com.br/v2/e3c7c60f73e44469a1c7a628970b1bd45204000053039865802BR5905EFISA6008SAOPAULO62070503***6304481B",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAADkCAYAAACIV4iNAAAAAklEQVR4AewaftIAAAxhSURBVO3BQW4s...",
+        "expiresAt": null
+      }
+    },
+    "shipping": null,
+    "createdAt": "2025-12-20T05:55:39.372Z"
+  }
+}
+```
+
+### Campos do Sale
+
+<ParamField body="id" type="integer" required>
+  ID único da venda criada
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status inicial da venda (geralmente `PENDENTE`)
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Valor da venda em centavos (formato string)
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento escolhido. Valores possíveis: `PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`
+</ParamField>
+
+<ParamField body="customer" type="object" required>
+  Dados do cliente
+</ParamField>
+
+<ParamField body="customer.name" type="string" required>
+  Nome completo do cliente
+</ParamField>
+
+<ParamField body="customer.email" type="string" required>
+  Email do cliente
+</ParamField>
+
+<ParamField body="customer.document" type="string">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customer.phone" type="string">
+  Telefone do cliente (apenas dígitos)
+</ParamField>
+
+<ParamField body="payment" type="object" required>
+  Dados do pagamento
+</ParamField>
+
+<ParamField body="payment.method" type="string" required>
+  Método de pagamento
+</ParamField>
+
+<ParamField body="payment.installments" type="integer">
+  Número de parcelas (apenas para cartão de crédito)
+</ParamField>
+
+<ParamField body="payment.pix" type="object">
+  Dados do PIX (apenas para PIX)
+</ParamField>
+
+<ParamField body="payment.pix.key" type="string">
+  Chave PIX gerada (formato completo do QR Code PIX)
+</ParamField>
+
+<ParamField body="payment.pix.qrCodeBase64" type="string">
+  QR Code em base64 para exibição (apenas para PIX). Formato: `data:image/png;base64,...`
+</ParamField>
+
+<ParamField body="payment.pix.expiresAt" type="string">
+  Data de expiração do PIX (ISO 8601). `null` se não expira
+</ParamField>
+
+<ParamField body="shipping" type="string">
+  Informações de entrega em formato JSON string (apenas para produtos físicos). `null` para produtos digitais.
+</ParamField>
+
+<ParamField body="createdAt" type="string" required>
+  Data de criação da venda (ISO 8601)
+</ParamField>
+
+## Status das Transações
+
+O campo `status` indica o estado atual da transação no sistema. Abaixo estão todos os status possíveis e seus contextos:
+
+### PENDENTE
+
+**Quando ocorre:**
+- Transação criada e aguardando pagamento
+- Status inicial para pagamentos PIX e Boleto
+- Cliente ainda não realizou o pagamento
+
+**O que significa:**
+- A transação foi criada com sucesso
+- O QR Code PIX ou código de barras do boleto foi gerado
+- Aguardando confirmação do pagamento pelo banco/gateway
+
+**Próximos status possíveis:**
+- `PAGO` - Quando o pagamento for confirmado
+- `CANCELADO` - Se a transação for cancelada antes do pagamento
+- `FALHA` - Se houver erro no processamento
+
+---
+
+### EM_PROCESSAMENTO
+
+**Quando ocorre:**
+- Pagamento com cartão de crédito/débito sendo processado
+- Transação enviada ao gateway de pagamento
+- Aguardando resposta do adquirente
+
+**O que significa:**
+- A transação está sendo analisada pelo gateway
+- Pode levar alguns segundos ou minutos
+- Status intermediário antes da confirmação ou recusa
+
+**Próximos status possíveis:**
+- `PAGO` - Se o pagamento for aprovado
+- `RECUSADO` - Se o pagamento for recusado
+- `FALHA` - Se houver erro no processamento
+
+---
+
+### PAGO
+
+**Quando ocorre:**
+- Pagamento confirmado e aprovado
+- Valor creditado na conta do vendedor
+- Transação concluída com sucesso
+
+**O que significa:**
+- O pagamento foi processado e confirmado
+- O valor está disponível (ou será creditado conforme regras de liquidação)
+- Transação finalizada com sucesso
+
+**Próximos status possíveis:**
+- `ESTORNADO` - Se o pagamento for estornado
+- `CHARGEBACK` - Se houver contestação do cliente
+- `MED` - Se entrar em mediação
+
+---
+
+### CANCELADO
+
+**Quando ocorre:**
+- Transação cancelada antes do pagamento
+- Cancelamento manual pelo vendedor
+- Cancelamento automático por expiração (PIX/Boleto)
+
+**O que significa:**
+- A transação não será processada
+- Nenhum valor foi debitado do cliente
+- Transação encerrada sem pagamento
+
+**Próximos status possíveis:**
+- Nenhum (status final)
+
+---
+
+### RECUSADO
+
+**Quando ocorre:**
+- Pagamento com cartão recusado pelo banco
+- Dados do cartão inválidos
+- Saldo insuficiente ou limite excedido
+- Cartão bloqueado ou cancelado
+
+**O que significa:**
+- O gateway de pagamento recusou a transação
+- Nenhum valor foi debitado
+- Cliente precisa usar outro método de pagamento
+
+**Próximos status possíveis:**
+- Nenhum (status final) - Cliente pode criar nova transação
+
+---
+
+### ESTORNADO
+
+**Quando ocorre:**
+- Pagamento estornado pelo vendedor
+- Estorno solicitado pelo cliente
+- Estorno automático por política da plataforma
+
+**O que significa:**
+- O valor foi devolvido ao cliente
+- Transação revertida
+- Valor debitado da conta do vendedor (se já havia sido creditado)
+
+**Próximos status possíveis:**
+- Nenhum (status final)
+
+---
+
+### FALHA
+
+**Quando ocorre:**
+- Erro no processamento da transação
+- Falha na comunicação com o gateway
+- Erro interno do sistema
+- Timeout na comunicação
+
+**O que significa:**
+- A transação não pôde ser processada
+- Pode ser um erro temporário
+- Recomenda-se tentar novamente
+
+**Próximos status possíveis:**
+- `PAGO` - Se o pagamento for processado em retry
+- `CANCELADO` - Se a transação for cancelada
+
+---
+
+### CHARGEBACK
+
+**Quando ocorre:**
+- **Apenas para pagamentos com cartão de crédito/débito**
+- Cliente contestou a transação junto ao banco emissor
+- Processo de chargeback iniciado pela adquirente
+- Transação em disputa bancária
+
+**O que significa:**
+- O banco emissor do cartão está investigando a transação
+- Multa de pré-chargeback pode ser aplicada
+- O valor pode ser debitado da conta do vendedor
+- Requer ação do vendedor para apresentar defesa junto à adquirente
+
+**Próximos status possíveis:**
+- `PAGO` - Se o chargeback for revertido (raro)
+- `ESTORNADO` - Se o chargeback for confirmado
+
+**Diferenças importantes:**
+- Aplica multa de pré-chargeback (diferente de MED)
+- Processo gerenciado pela adquirente (Cielo, PagSeguro, etc.)
+- Pode levar semanas para resolução
+
+---
+
+### MED
+
+**Quando ocorre:**
+- **Apenas para pagamentos PIX**
+- Cliente contestou a transação via MED do PIX
+- Disputa aberta no sistema do Banco Central (PIX)
+- Transação em processo de mediação PIX
+
+**O que significa:**
+- A transação está sendo analisada pelo sistema de mediação do PIX
+- O saldo do valor líquido (netAmount) é **bloqueado automaticamente** e movido para reserva financeira
+- Não aplica multa de pré-chargeback (diferente de chargeback de cartão)
+- Pode levar dias ou semanas para resolução
+
+**Fluxo completo de MED PIX:**
+
+1. **MED Aberto (OPEN) - Disputa Iniciada:**
+   - Cliente contesta a transação PIX via sistema de mediação do Banco Central
+   - Status da venda muda de `PAGO` para `MED`
+   - **Bloqueio automático de saldo:**
+     - O valor líquido (`netAmount`) que foi creditado ao vendedor é bloqueado
+     - Valor é movido do saldo disponível para reserva financeira
+     - Vendedor não pode usar esse valor até resolução da disputa
+   - **Não aplica multa** de pré-chargeback (diferente de chargeback de cartão)
+   - Disputa fica em análise pelo sistema de mediação do PIX
+
+2. **MED Ganho (WON) - Disputa Resolvida a Favor do Vendedor:**
+   - Sistema de mediação do PIX resolve a favor do vendedor
+   - **Liberação de saldo bloqueado:**
+     - Saldo bloqueado é **liberado** da reserva financeira
+     - Valor volta para o saldo disponível do vendedor
+   - Status da venda muda de `MED` para `PAGO`
+   - Vendedor mantém o valor e pode utilizá-lo normalmente
+   - Notificação de mudança de status é enviada
+
+3. **MED Perdido (LOST) - Disputa Resolvida a Favor do Cliente:**
+   - Sistema de mediação do PIX resolve a favor do cliente
+   - **Estorno do valor:**
+     - Saldo bloqueado é **decrementado da reserva financeira** (já estava bloqueado desde a abertura)
+     - **Não desconta do saldo disponível novamente** (evita desconto duplo)
+   - Status da venda muda de `MED` para `ESTORNADO`
+   - Valor é estornado ao cliente
+   - Taxas já cobradas não são devolvidas
+
+**Próximos status possíveis:**
+- `PAGO` - Se o MED for ganho (disputa resolvida a favor do vendedor)
+- `ESTORNADO` - Se o MED for perdido (disputa resolvida a favor do cliente)
+
+**Diferenças importantes entre MED e CHARGEBACK:**
+
+| Aspecto | MED (PIX) | CHARGEBACK (Cartão) |
+|---------|-----------|---------------------|
+| **Método de pagamento** | Apenas PIX | Apenas Cartão |
+| **Sistema de disputa** | Mediação do PIX (Banco Central) | Adquirente (Cielo, PagSeguro, etc.) |
+| **Multa de pré-chargeback** | ❌ Não aplica | ✅ Aplica |
+| **Bloqueio de saldo** | ✅ Automático quando MED abre | Depende da adquirente |
+| **Tempo de resolução** | Dias ou semanas | Semanas ou meses |
+| **Valor bloqueado** | Valor líquido (netAmount) | Valor do chargeback |
+| **Quando ocorre** | Cliente contesta via MED do PIX | Cliente contesta via banco emissor |
+
+---
+
+## Fluxo de Status Típico
+
+### Pagamento PIX/Boleto
+
+```text
+PENDENTE → PAGO
+         ↓
+      CANCELADO (se expirar)
+```
+
+### Pagamento com Cartão
+
+```text
+PENDENTE → EM_PROCESSAMENTO → PAGO
+                              ↓
+                           RECUSADO
+```
+
+### Após Pagamento Confirmado - PIX
+
+**Fluxo de MED PIX (específico para pagamentos PIX):**
+
+```text
+PAGO → MED (disputa aberta)
+     ↓
+  [Saldo bloqueado automaticamente]
+     ↓
+  MED GANHO → PAGO (saldo liberado)
+     ↓
+  MED PERDIDO → ESTORNADO (valor estornado)
+```
+
+**Fluxo de estorno PIX:**
+
+```text
+PAGO → ESTORNADO (estorno direto)
+```
+
+### Após Pagamento Confirmado - Cartão
+
+**Fluxo de Chargeback (específico para pagamentos com cartão):**
+
+```text
+PAGO → CHARGEBACK (disputa bancária)
+     ↓
+  [Multa de pré-chargeback aplicada]
+     ↓
+  CHARGEBACK GANHO → PAGO (raro)
+     ↓
+  CHARGEBACK PERDIDO → ESTORNADO (valor estornado)
+```
+
+**Fluxo de estorno Cartão:**
+
+```text
+PAGO → ESTORNADO (estorno direto)
+```
+
+## Notificações de Status
+
+Todas as mudanças de status são notificadas via webhook (se configurado no `postbackUrl`). A notificação inclui:
+
+- Status anterior
+- Status novo
+- Timestamp da mudança
+- Dados completos da transação
+

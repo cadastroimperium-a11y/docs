@@ -1,0 +1,176 @@
+---
+title: "Model Context Protocol (MCP)"
+description: "Conecte a documentação da ImperiumPay Gateway API a ferramentas de IA com nosso servidor MCP hospedado"
+---
+
+Conecte a documentação e endpoints da API ImperiumPay Gateway a ferramentas de IA através do nosso servidor MCP (Model Context Protocol) hospedado.
+
+<Note>
+  Esta página contém instruções completas para configurar o servidor MCP. **Não acesse a URL diretamente no navegador**. Siga as instruções abaixo para configurar corretamente em sua ferramenta de IA preferida.
+</Note>
+
+## O que é MCP?
+
+O Model Context Protocol (MCP) é um protocolo aberto que cria conexões padronizadas entre aplicações de IA e serviços externos. O NextPagamentos disponibiliza um servidor MCP público que permite que ferramentas de IA como Claude, Cursor, Goose e outras se conectem diretamente à documentação da API ImperiumPay Gateway, facilitando a integração e o desenvolvimento.
+
+## Como funciona
+
+O servidor MCP do NextPagamentos permite que ferramentas de IA acessem a documentação completa da API ImperiumPay Gateway em tempo real. Quando você conecta o servidor MCP em sua ferramenta de IA preferida, ela pode:
+
+- Pesquisar proativamente a documentação da ImperiumPay enquanto gera respostas, sem necessidade de solicitação explícita
+- Determinar automaticamente quando usar a documentação da ImperiumPay com base no contexto da conversa
+- Incorporar informações atualizadas sobre endpoints, parâmetros, exemplos de código e boas práticas diretamente nas respostas
+- Fornecer respostas mais precisas sobre integração com PIX, cartões, transferências e outras funcionalidades da API
+
+**Exemplo prático**: Se você perguntar "Como criar uma transação PIX?", a ferramenta de IA pode automaticamente buscar na documentação da ImperiumPay informações sobre o endpoint `/api/sales`, parâmetros necessários, exemplos de código e até mesmo verificar os status possíveis da transação, tudo sem que você precise navegar manualmente pela documentação.
+
+## URL do servidor MCP
+
+O servidor MCP do NextPagamentos está disponível publicamente na seguinte URL:
+
+<CodeGroup>
+```text URL do servidor MCP
+https://docs.nextpagamentos.io/mcp
+```
+</CodeGroup>
+
+<Info>
+  Servidores MCP hospedados usam o caminho `/mcp` em suas URLs. Este caminho é reservado e não pode ser usado para outros elementos de navegação.
+</Info>
+
+<Warning>
+  **Importante**: Esta URL não deve ser acessada diretamente no navegador. Ela é usada apenas para configuração nas ferramentas de IA. Siga as instruções abaixo para configurar o servidor MCP corretamente.
+</Warning>
+
+## Como usar o servidor MCP
+
+Para usar o servidor MCP da ImperiumPay Gateway em suas ferramentas de IA favoritas, siga as instruções abaixo:
+
+<Tabs>
+  <Tab title="Claude">
+    ### Conectar ao Claude
+
+    1. Acesse a página [Connectors](https://claude.ai/settings/connectors) nas configurações do Claude
+    2. Selecione **Add custom connector**
+    3. Adicione o servidor MCP da ImperiumPay:
+       - **Name**: `ImperiumPay Gateway`
+       - **URL**: `https://docs.nextpagamentos.io/mcp`
+    4. Selecione **Add**
+
+    ### Usar no chat
+
+    1. Ao usar o Claude, selecione o botão de anexos (ícone de mais)
+    2. Selecione o servidor MCP da ImperiumPay Gateway
+    3. Faça perguntas sobre a API ImperiumPay Gateway
+
+    <Tip>
+      Veja a [documentação do Model Context Protocol](https://modelcontextprotocol.io/docs/tutorials/use-remote-mcp-server#connecting-to-a-remote-mcp-server) para mais detalhes.
+    </Tip>
+  </Tab>
+
+  <Tab title="Claude Code">
+    ### Instalar via linha de comando
+
+    Execute o seguinte comando para adicionar o servidor MCP da ImperiumPay:
+
+    ```bash
+    claude mcp add --transport http ImperiumPayGateway https://docs.nextpagamentos.io/mcp
+    ```
+
+    ### Testar a conexão
+
+    ```bash
+    claude mcp list
+    ```
+
+    <Tip>
+      Veja a [documentação do Claude Code](https://docs.anthropic.com/en/docs/claude-code/mcp#installing-mcp-servers) para mais detalhes.
+    </Tip>
+  </Tab>
+
+  <Tab title="Cursor">
+    ### Configuração manual
+
+    1. Use **Command + Shift + P** (Ctrl + Shift + P no Windows) para abrir a paleta de comandos
+    2. Pesquise por "Open MCP settings"
+    3. Selecione **Add custom MCP**. Isso abre o arquivo `mcp.json`
+    4. Em `mcp.json`, adicione:
+
+    ```json
+    {
+      "mcpServers": {
+        "ImperiumPayGateway": {
+          "url": "https://docs.nextpagamentos.io/mcp"
+        }
+      }
+    }
+    ```
+
+    ### Testar a conexão
+
+    No chat do Cursor, pergunte "What tools do you have available?" O Cursor deve mostrar o servidor MCP da ImperiumPay Gateway como uma ferramenta disponível.
+
+    <Tip>
+      Veja a [documentação do Cursor](https://docs.cursor.com/en/context/mcp#installing-mcp-servers) para mais detalhes.
+    </Tip>
+  </Tab>
+
+  <Tab title="VS Code">
+    ### Configuração manual
+
+    1. Crie um arquivo `.vscode/mcp.json`
+    2. Em `mcp.json`, adicione:
+
+    ```json
+    {
+      "servers": {
+        "ImperiumPayGateway": {
+          "type": "http",
+          "url": "https://docs.nextpagamentos.io/mcp"
+        }
+      }
+    }
+    ```
+
+    <Tip>
+      Veja a [documentação do VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) para mais detalhes.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Ferramentas disponíveis
+
+O servidor MCP da ImperiumPay Gateway expõe uma ferramenta de busca que permite:
+
+- **Pesquisar documentação**: Buscar informações relevantes em toda a documentação da API
+- **Encontrar exemplos de código**: Localizar exemplos de implementação específicos
+- **Consultar referências da API**: Acessar detalhes sobre endpoints, parâmetros e respostas
+- **Entender recursos**: Obter explicações sobre como funcionalidades específicas funcionam
+
+## Benefícios
+
+<CardGroup cols={2}>
+  <Card title="Respostas mais precisas" icon="bullseye">
+    As ferramentas de IA podem buscar informações diretamente da documentação oficial, fornecendo respostas mais precisas e atualizadas
+  </Card>
+  <Card title="Contexto em tempo real" icon="clock">
+    Informações são recuperadas durante a geração da resposta, garantindo que o contexto mais recente seja usado
+  </Card>
+  <Card title="Busca proativa" icon="magnifying-glass">
+    O LLM pode pesquisar automaticamente quando detecta que a documentação é relevante, sem necessidade de solicitação explícita
+  </Card>
+  <Card title="Integração nativa" icon="plug">
+    Funciona nativamente com ferramentas populares de IA como Claude, Cursor, VS Code e outras
+  </Card>
+</CardGroup>
+
+## Casos de uso
+
+- **Desenvolvimento**: Desenvolvedores podem fazer perguntas sobre integração diretamente no IDE
+- **Suporte**: Equipes de suporte podem obter respostas rápidas e precisas sobre a API
+- **Aprendizado**: Novos usuários podem aprender sobre a API de forma interativa
+- **Debugging**: Encontrar soluções para problemas específicos com contexto da documentação oficial
+
+<Warning>
+  O servidor MCP está disponível apenas para documentação pública. Documentação protegida por autenticação não pode gerar um servidor MCP.
+</Warning>

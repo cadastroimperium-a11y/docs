@@ -1,0 +1,539 @@
+---
+title: "Criar Transação"
+description: "Crie uma nova transação (venda) na plataforma usando a API pública do ImperiumPay Gateway"
+api: "POST https://api.imperiumpay.com.br/api/sales"
+playground: true
+---
+
+Crie uma nova transação (venda) na plataforma. Você pode processar pagamentos via PIX, Cartão de Crédito, Cartão de Débito ou Boleto.
+
+<Endpoint method="post" url="/api/sales" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys:
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Parâmetros do Body
+
+<ParamField body="amount" type="integer" required>
+  Valor da transação em centavos (ex: 10000 = R\$ 100,00)
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`, `PIX`, `TRANSFER`
+</ParamField>
+
+<ParamField body="customer" type="object" required>
+  Dados do cliente
+</ParamField>
+
+<ParamField body="customer.name" type="string" required>
+  Nome completo do cliente
+</ParamField>
+
+<ParamField body="customer.email" type="string" required>
+  Email do cliente
+</ParamField>
+
+<ParamField body="customer.document" type="object">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customer.document.type" type="string">
+  Tipo do documento: `cpf` ou `cnpj`
+</ParamField>
+
+<ParamField body="customer.document.number" type="string">
+  Número do documento
+</ParamField>
+
+<ParamField body="customer.phone" type="string">
+  Telefone do cliente no formato 11999999999 (sem caracteres especiais)
+</ParamField>
+
+<ParamField body="card" type="object">
+  Informações do cartão (obrigatório para `CREDIT_CARD` ou `DEBIT_CARD`)
+</ParamField>
+
+<ParamField body="card.number" type="string">
+  Número do cartão (será tokenizado - apenas últimos 4 dígitos são armazenados)
+</ParamField>
+
+<ParamField body="card.holderName" type="string">
+  Nome do portador do cartão (será tokenizado)
+</ParamField>
+
+<ParamField body="card.expirationMonth" type="string">
+  Mês de expiração no formato MM
+</ParamField>
+
+<ParamField body="card.expirationYear" type="string">
+  Ano de expiração no formato YYYY
+</ParamField>
+
+<ParamField body="card.cvv" type="string">
+  CVV do cartão (não é armazenado conforme PCI DSS)
+</ParamField>
+
+<ParamField body="card.installments" type="integer">
+  Número de parcelas (apenas para cartão de crédito)
+</ParamField>
+
+<ParamField body="pix" type="object">
+  Informações do PIX (obrigatório para `PIX`)
+</ParamField>
+
+<ParamField body="pix.key" type="string">
+  Chave PIX do recebedor
+</ParamField>
+
+<ParamField body="pix.expiresInDays" type="integer">
+  Número de dias para expiração do PIX
+</ParamField>
+
+<ParamField body="boleto" type="object">
+  Informações do boleto (obrigatório para `BOLETO`)
+</ParamField>
+
+<ParamField body="boleto.expiresInDays" type="integer">
+  Número de dias para expiração do boleto
+</ParamField>
+
+<ParamField body="items" type="array" required>
+  Lista de itens da transação
+</ParamField>
+
+<ParamField body="items[].title" type="string" required>
+  Nome do produto
+</ParamField>
+
+<ParamField body="items[].unitPrice" type="integer" required>
+  Preço unitário em centavos
+</ParamField>
+
+<ParamField body="items[].quantity" type="integer" required>
+  Quantidade do item
+</ParamField>
+
+<ParamField body="items[].tangible" type="boolean" required>
+  Se o item é físico (`true`) ou digital (`false`)
+</ParamField>
+
+<ParamField body="items[].productId" type="integer">
+  ID do produto (opcional)
+</ParamField>
+
+<ParamField body="items[].planId" type="string">
+  ID do plano (opcional)
+</ParamField>
+
+<ParamField body="items[].planName" type="string">
+  Nome do plano (opcional)
+</ParamField>
+
+<ParamField body="items[].id" type="string">
+  ID customizado do item (opcional)
+</ParamField>
+
+<ParamField body="shipping" type="object">
+  Informações de entrega (obrigatório quando há itens físicos com `tangible: true`)
+</ParamField>
+
+<ParamField body="shipping.street" type="string">
+  Rua
+</ParamField>
+
+<ParamField body="shipping.streetNumber" type="string">
+  Número
+</ParamField>
+
+<ParamField body="shipping.complement" type="string">
+  Complemento
+</ParamField>
+
+<ParamField body="shipping.zipCode" type="string">
+  CEP
+</ParamField>
+
+<ParamField body="shipping.neighborhood" type="string">
+  Bairro
+</ParamField>
+
+<ParamField body="shipping.city" type="string">
+  Cidade
+</ParamField>
+
+<ParamField body="shipping.state" type="string">
+  Estado (2 dígitos em maiúscula, ex: SP)
+</ParamField>
+
+<ParamField body="shipping.country" type="string">
+  País (2 dígitos, ex: br)
+</ParamField>
+
+<ParamField body="installments" type="object">
+  Configuração de parcelas (apenas para cartão de crédito)
+</ParamField>
+
+<ParamField body="installments.number" type="integer">
+  Número de parcelas (1 a 12)
+</ParamField>
+
+<ParamField body="postbackUrl" type="string">
+  URL para receber notificações de mudança de status da venda
+</ParamField>
+
+<ParamField body="utmSource" type="string">
+  Origem da campanha (UTM Source). Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="utmMedium" type="string">
+  Meio da campanha (UTM Medium). Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="utmCampaign" type="string">
+  Nome da campanha (UTM Campaign). Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="utmContent" type="string">
+  Conteúdo da campanha (UTM Content). Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="utmTerm" type="string">
+  Termo da campanha (UTM Term). Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="src" type="string">
+  Fonte personalizada. Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="sck" type="string">
+  Código de campanha personalizado. Funciona para qualquer método de pagamento (PIX, cartão, boleto, etc.)
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Dados adicionais da venda (objeto JSON livre)
+</ParamField>
+
+<ResponseExample>
+
+```json Success - PIX Pendente (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 2486,
+    "amount": "5000",
+    "status": "PENDENTE",
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": "14793766633",
+      "phone": "5511943034718"
+    },
+    "payment": {
+      "method": "PIX",
+      "installments": null,
+      "pix": {
+        "key": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix.sejaefi.com.br/v2/e3c7c60f73e44469a1c7a628970b1bd45204000053039865802BR5905EFISA6008SAOPAULO62070503***6304481B",
+        "qrCodeBase64": "data:image/png;base64,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fEjlL1VMFd9UMalMFZPKicpvUpkq/lLFpPJGxaQyVZyonKhMFScVk8pJxTc9rLWu8bDWusbDWusaP3xZxTepfFPFicpUMalMFW9UnFRMKicVn1CZKr6pYlKZKqaKE5U3Kt5QmSomlZOKTzysta7xsNa6xsNa6xo//DKVNyreUJkqpoq/pHKiclJxovJNFZPKScVJxUnFGypTxaQyqXyiYlKZKiaVb3pYa13jYa11jYe11jV++I+rmFTeqHijYlKZKiaVk4qTihOVqWJSmVSmiqniROWNiknljYqTik+onFRMKlPFNz2sta7xsNa6xsNa6xo//MepvFExqUwVb1RMKlPFpDKpvFExVZxUfELljYqTikllqphU3qiYVKaKE5WpYqqYVKaKTzysta7xsNa6xsNa6xo//LKK31RxonJScaLyRsUbFW+onFRMKlPFicpU8YbKVHFSMalMFZPKVPGGyjdVfNPDWusaD2utazysta7xw5ep/CWVqWKqmFSmik9UvFFxonJSMal8QuVEZaqYVE5UpopJ5URlqphUpoqTijdUpopJZar4xMNa6xoPa61rPKy1rmH/sNa6wsNa6xoPa61rPKy1rvGw1rrGw1rrGg9rrWs8rLWu8bDWusbDWusaD2utazysta7xsNa6xsNa6xoPa61rPKy1rvH/AEJo7NEFG8fzAAAAAElFTkSuQmCC",
+        "expiresAt": null
+      }
+    },
+    "shipping": null,
+    "createdAt": "2025-12-20T05:55:39.372Z"
+  }
+}
+```
+
+
+```json Success - Cartão de Crédito Pago (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 2489,
+    "amount": "2000",
+    "status": "PAGO",
+    "paymentMethod": "CREDIT_CARD",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": "14793766633",
+      "phone": "119943034718"
+    },
+    "payment": {
+      "method": "CREDIT_CARD",
+      "installments": null,
+      "card": {
+        "lastDigits": "1111",
+        "brand": "VISA"
+      }
+    },
+    "shipping": "{\"street\":\"Rua das Flores\",\"streetNumber\":\"123\",\"complement\":\"Apartamento 45\",\"neighborhood\":\"Jardim Paulista\",\"city\":\"São Paulo\",\"state\":\"SP\",\"zipCode\":\"04567010\",\"country\":\"br\"}",
+    "createdAt": "2025-12-20T16:19:58.176Z"
+  }
+}
+```
+
+
+```json Success - Cartão de Crédito Recusado (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 2490,
+    "amount": "2000",
+    "status": "RECUSADO",
+    "paymentMethod": "CREDIT_CARD",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": "14793766633",
+      "phone": "119943034718"
+    },
+    "payment": {
+      "method": "CREDIT_CARD",
+      "installments": null,
+      "card": {
+        "lastDigits": "0002",
+        "brand": "VISA"
+      }
+    },
+    "shipping": "{\"street\":\"Rua das Flores\",\"streetNumber\":\"123\",\"complement\":\"Apartamento 45\",\"neighborhood\":\"Jardim Paulista\",\"city\":\"São Paulo\",\"state\":\"SP\",\"zipCode\":\"04567010\",\"country\":\"br\"}",
+    "createdAt": "2025-12-20T16:22:43.336Z"
+  }
+}
+```
+
+</ResponseExample>
+
+<RequestExample>
+
+```bash PIX - Produto Digital
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.silva@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "12345678900"
+      },
+      "phone": "11999999999"
+    },
+    "items": [
+      {
+        "title": "Produto Digital - Assinatura Premium",
+        "unitPrice": 5000,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao",
+    "metadata": {
+      "source": "website",
+      "campaign": "promocao-verao-2025"
+    }
+  }'
+```
+
+```bash PIX - Produto Físico
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 15680,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "Maria Santos Oliveira",
+      "email": "maria.santos@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "98765432100"
+      },
+      "phone": "11988887777"
+    },
+    "items": [
+      {
+        "title": "Curso Avançado de Desenvolvimento Web",
+        "unitPrice": 15680,
+        "quantity": 1,
+        "tangible": true
+      }
+    ],
+    "shipping": {
+      "street": "Rua das Flores",
+      "streetNumber": "123",
+      "complement": "Apartamento 45",
+      "zipCode": "04567-010",
+      "neighborhood": "Jardim Paulista",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "br"
+    },
+    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao",
+    "metadata": {
+      "source": "website",
+      "campaign": "promocao-verao-2025"
+    }
+  }'
+```
+
+```bash Cartão de Crédito
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 10000,
+    "paymentMethod": "CREDIT_CARD",
+    "installments": {
+      "number": 1
+    },
+    "customer": {
+      "name": "Carlos Eduardo Pereira",
+      "email": "carlos.pereira@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "11122233344"
+      },
+      "phone": "11977776666"
+    },
+    "card": {
+      "number": "4111111111111111",
+      "holderName": "CARLOS E PEREIRA",
+      "expirationMonth": "12",
+      "expirationYear": "2025",
+      "cvv": "123"
+    },
+    "items": [
+      {
+        "id": "produto-001",
+        "title": "Produto Digital - Licença Anual",
+        "unitPrice": 10000,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao",
+    "metadata": {
+      "source": "website",
+      "campaign": "promocao-verao-2025"
+    }
+  }'
+```
+
+```bash PIX com UTM e Rastreamento
+curl -v -X POST "https://api.imperiumpay.com.br/api/sales" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": {
+        "type": "cpf",
+        "number": "12345678900"
+      },
+      "phone": "+5511943034718"
+    },
+    "items": [
+      {
+        "title": "Curso Avançado de Desenvolvimento",
+        "unitPrice": 5000,
+        "quantity": 1,
+        "tangible": true,
+        "planId": "curso-dev-avancado",
+        "planName": "Curso Dev Avançado"
+      }
+    ],
+    "shipping": {
+      "street": "Rua das Flores",
+      "streetNumber": "123",
+      "complement": "Apartamento 45",
+      "zipCode": "04567-010",
+      "neighborhood": "Jardim Paulista",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "br"
+    },
+    "metadata": {
+      "source": "website",
+      "campaign": "janeiro2025",
+      "utm_source": "facebook",
+      "utm_medium": "cpc",
+      "utm_campaign": "curso_desenvolvimento_2025",
+      "utm_content": "banner_principal",
+      "utm_term": "desenvolvimento+web",
+      "sck": "campaign123",
+      "src": "facebook_ads"
+    },
+    "postbackUrl": "https://seupostbackurl.com.br/webhook/transacao"
+  }'
+```
+
+</RequestExample>
+
+## Códigos de Erro
+
+<ResponseExample>
+
+```json Error - 400 Bad Request
+{
+  "message": "Campos obrigatórios faltando",
+  "error": "Dados inválidos",
+  "details": {
+    "missingFields": ["customer.email", "items"]
+  }
+}
+```
+
+</ResponseExample>
+
+<ResponseExample>
+
+```json Error - 401 Unauthorized
+{
+  "message": "Combinação de chaves de API inválida",
+  "details": "Verifique se ambas as chaves pertencem ao mesmo usuário e estão corretas"
+}
+```
+
+</ResponseExample>
+
+<ResponseExample>
+
+```json Error - 500 Internal Server Error
+{
+  "message": "Erro ao criar venda",
+  "error": "Falha ao processar pagamento no momento. Tente novamente mais tarde."
+}
+```
+
+</ResponseExample>
+
+### Status HTTP
+
+| Código | Descrição                                            |
+| ------ | ---------------------------------------------------- |
+| `201`  | Venda criada com sucesso                             |
+| `400`  | Dados inválidos ou campos obrigatórios faltando      |
+| `401`  | Não autorizado - Chaves de API inválidas ou ausentes |
+| `422`  | Erro de validação (ex: valor mínimo não atingido)    |
+| `500`  | Erro interno do servidor                             |

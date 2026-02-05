@@ -1,0 +1,63 @@
+---
+title: Visão Geral
+description: Entenda como funcionam as transferências na API ImperiumPay Gateway
+icon: "arrow-right-arrow-left"
+---
+
+Solicite saques do seu saldo disponível para qualquer chave PIX de forma rápida e segura.
+
+<Steps>
+  <Step title="Solicitar Transferência">
+    Informe o valor e a chave PIX de destino via API
+  </Step>
+  <Step title="Validação">
+    Sistema valida saldo disponível e configurações da conta
+  </Step>
+  <Step title="Processamento">
+    Transferência é processada automaticamente
+  </Step>
+  <Step title="Conclusão">
+    Valor é enviado para a chave PIX informada
+  </Step>
+</Steps>
+
+## Requisitos
+
+- Saldo disponível suficiente
+- Chave PIX válida
+- Configuração de transferências habilitada na sua conta
+- Permissão para realizar saques via API (se aplicável)
+
+## Limites
+
+- **Valor mínimo**: R$ 1,00
+- **Valor máximo**: R$ 100.000,00 por transferência
+- **Taxas**: Podem ser aplicadas taxas fixas e/ou percentuais conforme configuração
+
+## Status de Transferência
+
+As transferências podem ter os seguintes status:
+
+| Status | Descrição |
+|--------|-----------|
+| `PENDING` | Aguardando processamento |
+| `PROCESSING` | Em processamento |
+| `COMPLETED` | Transferência concluída |
+| `FAILED` | Falha no processamento |
+| `CANCELLED` | Transferência cancelada |
+
+## Tipos de Chave PIX
+
+A API suporta os seguintes tipos de chave PIX:
+
+- `CPF` - CPF (padrão)
+- `CNPJ` - CNPJ
+- `EMAIL` - Email
+- `PHONE` - Telefone
+- `RANDOM` - Chave aleatória
+
+## Próximos Passos
+
+- [Criar uma transferência](/transfers/create)
+- [Ver objetos de resposta](/transfers/response-objects)
+

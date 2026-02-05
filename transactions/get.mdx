@@ -1,0 +1,268 @@
+---
+title: "Buscar Transação"
+description: "Recupere os detalhes de uma transação específica usando o ID da venda"
+api: "GET https://api.imperiumpay.com.br/api/transactions/{id}"
+---
+
+Recupera os detalhes de uma transação específica usando o ID da venda.
+
+<Endpoint method="get" url="/api/transactions/{id}" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys:
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Parâmetros
+
+<ParamField path="id" type="integer" required>
+  ID da venda (Sale ID)
+</ParamField>
+
+## Exemplo de Requisição
+
+<RequestExample>
+
+```bash cURL
+curl -X GET https://api.imperiumpay.com.br/api/transactions/12345 \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+## Resposta de Sucesso
+
+<ResponseField name="id" type="integer">
+  ID da venda
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status atual da venda. Valores possíveis: `PENDENTE`, `PAGO`, `CANCELADO`, `RECUSADO`, `ESTORNADO`, `FALHA`, `EM_PROCESSAMENTO`, `CHARGEBACK`, `MED`
+</ResponseField>
+
+<ResponseField name="amount" type="number">
+  Valor bruto em centavos
+</ResponseField>
+
+<ResponseField name="netAmount" type="number">
+  Valor líquido creditado em centavos
+</ResponseField>
+
+<ResponseField name="systemFee" type="number">
+  Taxas cobradas em centavos
+</ResponseField>
+
+<ResponseField name="reserveAmount" type="number">
+  Reserva financeira bloqueada em centavos
+</ResponseField>
+
+<ResponseField name="paymentMethod" type="string">
+  Método de pagamento. Valores possíveis: `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`, `PIX`, `TRANSFER`
+</ResponseField>
+
+<ResponseField name="date" type="string">
+  Data de criação da venda (ISO 8601)
+</ResponseField>
+
+<ResponseField name="completedAt" type="string">
+  Data de conclusão do pagamento (ISO 8601). `null` se ainda não foi concluído
+</ResponseField>
+
+<ResponseField name="customer" type="object">
+  Dados do cliente
+</ResponseField>
+
+<ResponseField name="customer.name" type="string">
+  Nome do cliente
+</ResponseField>
+
+<ResponseField name="customer.email" type="string">
+  Email do cliente
+</ResponseField>
+
+<ResponseField name="customer.document" type="string">
+  Documento do cliente
+</ResponseField>
+
+<ResponseField name="customer.phone" type="string">
+  Telefone do cliente
+</ResponseField>
+
+<ResponseField name="items" type="array">
+  Lista de itens da transação
+</ResponseField>
+
+<ResponseField name="items[].id" type="integer">
+  ID do item
+</ResponseField>
+
+<ResponseField name="items[].title" type="string">
+  Nome do produto
+</ResponseField>
+
+<ResponseField name="items[].unitPrice" type="number">
+  Preço unitário em centavos
+</ResponseField>
+
+<ResponseField name="items[].quantity" type="integer">
+  Quantidade
+</ResponseField>
+
+<ResponseField name="items[].tangible" type="boolean">
+  Se o item é físico ou digital
+</ResponseField>
+
+<ResponseField name="pixKey" type="string">
+  Chave PIX (apenas para PIX)
+</ResponseField>
+
+<ResponseField name="cardLastFour" type="string">
+  Últimos 4 dígitos do cartão (apenas para cartão)
+</ResponseField>
+
+<ResponseField name="cardBrand" type="string">
+  Bandeira do cartão (apenas para cartão)
+</ResponseField>
+
+<ResponseField name="boletoCode" type="string">
+  Código do boleto (apenas para boleto)
+</ResponseField>
+
+<ResponseField name="externalTransactionId" type="string">
+  ID da transação no gateway de pagamento
+</ResponseField>
+
+<ResponseField name="installments" type="integer">
+  Número de parcelas (apenas para cartão de crédito)
+</ResponseField>
+
+<ResponseField name="shipping" type="object">
+  Informações de entrega (apenas para produtos físicos)
+</ResponseField>
+
+### Exemplo de Resposta
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "id": 12345,
+  "status": "PAGO",
+  "amount": 10000,
+  "netAmount": 9500,
+  "systemFee": 500,
+  "reserveAmount": 0,
+  "paymentMethod": "CREDIT_CARD",
+  "date": "2024-01-15T10:30:00.000Z",
+  "completedAt": "2024-01-15T10:31:00.000Z",
+  "customer": {
+    "name": "João Silva",
+    "email": "joao@exemplo.com",
+    "document": "12345678900",
+    "phone": "11999999999"
+  },
+  "items": [
+    {
+      "id": 1,
+      "title": "Produto de Teste",
+      "unitPrice": 10000,
+      "quantity": 1,
+      "tangible": false
+    }
+  ],
+  "pixKey": null,
+  "cardLastFour": "1234",
+  "cardBrand": "VISA",
+  "boletoCode": null,
+  "externalTransactionId": "ext_123456",
+  "installments": 1,
+  "shipping": {}
+}
+```
+
+</ResponseExample>
+
+## Códigos de Erro
+
+### 400 Bad Request
+
+ID inválido.
+
+<ResponseExample>
+
+```json Error - 400 Bad Request
+{
+  "message": "ID inválido",
+  "error": "O ID da transação deve ser um número válido"
+}
+```
+
+</ResponseExample>
+
+### 401 Unauthorized
+
+Não autorizado - Chaves de API inválidas ou ausentes.
+
+<ResponseExample>
+
+```json Error - 401 Unauthorized
+{
+  "message": "Não autorizado",
+  "error": "Chaves de API inválidas ou ausentes"
+}
+```
+
+</ResponseExample>
+
+### 403 Forbidden
+
+Acesso negado - Venda não pertence ao usuário autenticado.
+
+<ResponseExample>
+
+```json Error - 403 Forbidden
+{
+  "message": "Acesso negado",
+  "error": "Esta transação não pertence à sua conta"
+}
+```
+
+</ResponseExample>
+
+### 404 Not Found
+
+Venda não encontrada.
+
+<ResponseExample>
+
+```json Error - 404 Not Found
+{
+  "message": "Transação não encontrada",
+  "error": "A transação com o ID informado não existe"
+}
+```
+
+</ResponseExample>
+
+### 500 Internal Server Error
+
+Erro interno do servidor.
+
+<ResponseExample>
+
+```json Error - 500 Internal Server Error
+{
+  "message": "Erro interno do servidor",
+  "error": "Falha ao buscar transação. Tente novamente mais tarde."
+}
+```
+
+</ResponseExample>

@@ -1,0 +1,127 @@
+---
+title: "Introdução"
+description: "Bem-vindo à documentação da API ImperiumPay Gateway"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="ImperiumPay Hero Light"
+/>
+
+A plataforma completa de pagamentos para o seu negócio. Integre PIX, Cartão de Crédito, Débito e Boleto em minutos.
+
+<CardGroup cols={2}>
+  <Card title="Início Rápido" icon="rocket" href="/authentication">
+    Configure sua primeira integração em menos de 5 minutos
+  </Card>
+  <Card title="Criar Transação" icon="credit-card" href="/transactions/create">
+    Processe pagamentos com PIX, cartão ou boleto
+  </Card>
+  <Card title="Consultar Saldo" icon="wallet" href="/balance/get">
+    Verifique seu saldo disponível em tempo real
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/transactions/webhooks">
+    Receba notificações automáticas de mudanças de status
+  </Card>
+</CardGroup>
+
+## Por que ImperiumPay?
+
+<AccordionGroup>
+  <Accordion title="Múltiplos Métodos de Pagamento" icon="credit-card">
+    Aceite **PIX**, **Cartão de Crédito** (até 12x), **Cartão de Débito** e **Boleto Bancário** em uma única integração.
+  </Accordion>
+  <Accordion title="Segurança PCI DSS" icon="shield-check">
+    Compliance total com os mais altos padrões de segurança da indústria de pagamentos.
+  </Accordion>
+  <Accordion title="API RESTful Moderna" icon="code">
+    Integração simples e intuitiva com documentação completa e exemplos práticos.
+  </Accordion>
+  <Accordion title="Gestão Completa" icon="chart-line">
+    Controle total sobre transações, transferências, saldo e relatórios em tempo real.
+  </Accordion>
+</AccordionGroup>
+
+## Base URL
+
+```text
+https://api.imperiumpay.com.br/api
+```
+
+## Autenticação
+
+Todas as requisições à API pública utilizam autenticação via **API Keys**:
+
+- **X-Api-Public-Key**: Chave pública da API
+- **X-Api-Private-Key**: Chave privada da API
+
+Você pode gerar suas chaves de API através do dashboard administrativo.
+
+## Formato de Resposta
+
+Todas as respostas da API seguem um formato padrão:
+
+### Sucesso
+
+```json
+{
+  "success": true,
+  "data": {
+    // Dados específicos do endpoint
+  },
+  "message": "Operação realizada com sucesso"
+}
+```
+
+### Erro
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Erro de validação",
+    "details": [
+      {
+        "field": "amount",
+        "message": "Valor inválido"
+      }
+    ]
+  }
+}
+```
+
+## Códigos de Status HTTP
+
+- `200 OK` - Requisição bem-sucedida
+- `201 Created` - Recurso criado com sucesso
+- `400 Bad Request` - Erro de validação
+- `401 Unauthorized` - Credenciais inválidas
+- `403 Forbidden` - Sem permissão para acessar o recurso
+- `404 Not Found` - Recurso não encontrado
+- `422 Unprocessable Entity` - Dados válidos, mas não processáveis
+- `429 Too Many Requests` - Limite de taxa excedido
+- `500 Internal Server Error` - Erro interno do servidor
+
+## Rate Limiting
+
+A API implementa limites de taxa para proteger contra abusos:
+
+- Rotas de transações: 300 requisições por minuto por usuário
+- Rotas de transferências: 10 requisições por minuto por usuário
+- Outras rotas: 60 requisições por minuto por usuário
+
+Os limites são informados nos cabeçalhos de resposta:
+
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+X-RateLimit-Reset: 1630000000
+```
+
+## Suporte
+
+Para suporte técnico ou dúvidas sobre a API:
+
+- Email: [suporte@nextpagamentos.io](mailto:suporte@nextpagamentos.io)

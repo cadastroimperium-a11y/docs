@@ -1,0 +1,551 @@
+---
+title: Webhooks e Postbacks
+description: Entenda como receber notificações de mudanças de status das transações
+---
+
+O ImperiumPay Gateway oferece duas formas de receber notificações sobre mudanças de status das transações:
+
+1. **Webhook Permanente**: Configurado no painel do usuário, recebe notificações de todas as transações
+2. **Postback por Transação**: URL específica configurada no campo `postbackUrl` ao criar uma venda
+
+## Diferenças entre Webhook e Postback
+
+<CardGroup cols={2}>
+  <Card title="Webhook Permanente" icon="link">
+    - Configurado no painel do usuário
+    - Recebe notificações de todas as transações
+    - Inclui campos adicionais: `fee`, `transactionId`, `type`
+    - Sem assinatura HMAC
+  </Card>
+  <Card title="Postback por Transação" icon="webhook">
+    - Configurado no campo `postbackUrl` da venda
+    - Recebe notificação apenas da transação específica
+    - Inclui `externalTransactionId`
+    - Com assinatura HMAC no header `X-Signature`
+  </Card>
+</CardGroup>
+
+## Webhook Permanente
+
+Webhooks permanentes são configurados no painel do usuário e recebem notificações de todas as transações do usuário.
+
+### Configuração
+
+Configure seu webhook permanente no painel administrativo do ImperiumPay Gateway. O webhook será chamado sempre que uma transação mudar de status.
+
+### Formato da Notificação
+
+O webhook permanente envia um payload com os seguintes campos:
+
+```json
+{
+  "id": 789,
+  "userId": 1,
+  "amount": "29900",
+  "date": "2025-02-10T15:30:00.000Z",
+  "status": "PAGO",
+  "paymentMethod": "PIX",
+  "customerDocument": "12345678901",
+  "customerEmail": "maria.santos@example.com",
+  "customerName": "Maria Silva Santos",
+  "customerPhone": "11999887766",
+  "pixKey": "00020126870014br.gov.bcb.pix2565pix.creditag.com.br/qr/v3/at/abc123...",
+  "boletoCode": null,
+  "shipping": null,
+  "fee": 0,
+  "saleItems": [
+    {
+      "id": 789,
+      "saleId": 789,
+      "title": "Curso de Programação",
+      "unitPrice": "29900",
+      "quantity": 1,
+      "tangible": false
+    }
+  ],
+  "transactionId": 789,
+  "type": "TRANSACTION"
+}
+```
+
+### Campos do Webhook Permanente
+
+<ParamField body="id" type="integer" required>
+  ID da transação (Sale ID)
+</ParamField>
+
+<ParamField body="userId" type="integer" required>
+  ID do usuário (vendedor)
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Valor da transação em centavos (formato string)
+</ParamField>
+
+<ParamField body="date" type="string" required>
+  Data de criação da transação (ISO 8601)
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status atual da transação. Valores possíveis: `PENDENTE`, `EM_PROCESSAMENTO`, `PAGO`, `CANCELADO`, `RECUSADO`, `ESTORNADO`, `FALHA`, `CHARGEBACK`, `MED`
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`
+</ParamField>
+
+<ParamField body="customerDocument" type="string">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customerEmail" type="string">
+  Email do cliente
+</ParamField>
+
+<ParamField body="customerName" type="string">
+  Nome completo do cliente
+</ParamField>
+
+<ParamField body="customerPhone" type="string">
+  Telefone do cliente (apenas dígitos)
+</ParamField>
+
+<ParamField body="pixKey" type="string">
+  Chave PIX gerada (apenas para pagamentos PIX)
+</ParamField>
+
+<ParamField body="boletoCode" type="string">
+  Código do boleto (apenas para pagamentos via boleto)
+</ParamField>
+
+<ParamField body="shipping" type="string">
+  Informações de entrega em formato JSON string (apenas para produtos físicos). `null` para produtos digitais.
+</ParamField>
+
+<ParamField body="fee" type="number" required>
+  Taxa cobrada na transação em centavos. **Apenas no webhook permanente.**
+</ParamField>
+
+<ParamField body="saleItems" type="array" required>
+  Lista de itens da transação
+</ParamField>
+
+<ParamField body="saleItems[].id" type="integer" required>
+  ID do item
+</ParamField>
+
+<ParamField body="saleItems[].saleId" type="integer" required>
+  ID da venda (mesmo que `id`)
+</ParamField>
+
+<ParamField body="saleItems[].title" type="string" required>
+  Título do produto
+</ParamField>
+
+<ParamField body="saleItems[].unitPrice" type="string" required>
+  Preço unitário em centavos (formato string)
+</ParamField>
+
+<ParamField body="saleItems[].quantity" type="integer" required>
+  Quantidade do item
+</ParamField>
+
+<ParamField body="saleItems[].tangible" type="boolean" required>
+  Se o item é físico (`true`) ou digital (`false`)
+</ParamField>
+
+<ParamField body="transactionId" type="integer" required>
+  ID da transação (mesmo que `id`). **Apenas no webhook permanente.**
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Tipo da notificação. Sempre `"TRANSACTION"` para webhooks de transações. **Apenas no webhook permanente.**
+</ParamField>
+
+---
+
+## Postback por Transação
+
+Postbacks são URLs específicas configuradas no campo `postbackUrl` ao criar uma venda. Recebem notificações apenas daquela transação específica.
+
+### Configuração
+
+Configure o postback incluindo o campo `postbackUrl` ao criar a transação:
+
+```json
+{
+  "amount": 29900,
+  "paymentMethod": "PIX",
+  "customer": {
+    "name": "Maria Silva Santos",
+    "email": "maria.santos@example.com"
+  },
+  "items": [...],
+  "postbackUrl": "https://seu-servidor.com/webhook/transacao"
+}
+```
+
+### Segurança
+
+Postbacks incluem assinatura HMAC-SHA256 no header `X-Signature` para validação de segurança. A assinatura é gerada usando a chave secreta `POSTBACK_SECRET_KEY` configurada no ambiente do ImperiumPay Gateway.
+
+<Warning>
+**Importante**: Sempre valide a assinatura HMAC antes de processar a notificação. Isso garante que a requisição realmente veio do ImperiumPay Gateway e não foi alterada durante a transmissão.
+</Warning>
+
+**Como funciona a assinatura:**
+
+1. O ImperiumPay Gateway gera uma assinatura HMAC-SHA256 do payload JSON usando a chave secreta `POSTBACK_SECRET_KEY`
+2. A assinatura é enviada no header HTTP `X-Signature`
+3. Você deve validar a assinatura comparando com a assinatura esperada gerada localmente
+
+**Exemplo de requisição com assinatura:**
+
+```http
+POST https://seupostbackurl.com.br/webhook/transacao
+Content-Type: application/json
+X-Signature: a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456
+```
+
+**Validação da Assinatura em Node.js:**
+
+```javascript
+const crypto = require('crypto');
+
+function validateSignature(payload, signature, secretKey) {
+  // Gerar assinatura esperada usando a mesma chave secreta
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(JSON.stringify(payload));
+  const expectedSignature = hmac.digest('hex');
+  
+  // Comparar assinaturas de forma segura (timing-safe)
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
+  );
+}
+
+// Uso no endpoint
+app.post('/webhook/transacao', (req, res) => {
+  const signature = req.headers['x-signature'];
+  const payload = req.body;
+  const secretKey = process.env.POSTBACK_SECRET_KEY;
+  
+  if (!validateSignature(payload, signature, secretKey)) {
+    return res.status(401).json({ error: 'Assinatura inválida' });
+  }
+  
+  // Processar notificação...
+});
+```
+
+**Validação da Assinatura em Python:**
+
+```python
+import hmac
+import hashlib
+import json
+import os
+
+def validate_signature(payload, signature, secret_key):
+    """
+    Valida a assinatura HMAC-SHA256 do postback.
+    
+    IMPORTANTE: O JSON deve ser stringificado SEM ordenação de chaves,
+    exatamente como enviado pelo ImperiumPay Gateway.
+    """
+    # Gerar assinatura esperada
+    payload_json = json.dumps(payload, separators=(',', ':'))
+    expected_signature = hmac.new(
+        secret_key.encode('utf-8'),
+        payload_json.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Comparar assinaturas de forma segura
+    return hmac.compare_digest(signature, expected_signature)
+
+# Uso no endpoint Flask
+@app.route('/webhook/transacao', methods=['POST'])
+def webhook_transacao():
+    signature = request.headers.get('X-Signature')
+    payload = request.json
+    secret_key = os.environ.get('POSTBACK_SECRET_KEY')
+    
+    if not validate_signature(payload, signature, secret_key):
+        return jsonify({'error': 'Assinatura inválida'}), 401
+    
+    # Processar notificação...
+    return jsonify({'success': True}), 200
+```
+
+<Info>
+**Sobre a chave secreta**: A chave `POSTBACK_SECRET_KEY` é configurada no ambiente do ImperiumPay Gateway. Esta é a mesma chave que você deve usar para validar as assinaturas dos postbacks. Entre em contato com o suporte técnico para obter ou configurar sua chave secreta de postback.
+
+**Nota importante**: O JSON do payload é stringificado **sem ordenação de chaves** (`JSON.stringify` padrão). Não use `sort_keys=True` no Python ou qualquer ordenação de chaves, pois isso resultará em assinaturas diferentes e a validação falhará.
+</Info>
+
+### Formato da Notificação
+
+O postback por transação envia um payload com os seguintes campos:
+
+```json
+{
+  "id": 789,
+  "userId": 1,
+  "amount": "29900",
+  "date": "2025-02-10T15:30:00.000Z",
+  "status": "PAGO",
+  "paymentMethod": "PIX",
+  "customerDocument": "12345678901",
+  "customerEmail": "maria.santos@example.com",
+  "customerName": "Maria Silva Santos",
+  "customerPhone": "11999887766",
+  "pixKey": "00020126870014br.gov.bcb.pix2565pix.creditag.com.br/qr/v3/at/abc123...",
+  "boletoCode": null,
+  "shipping": null,
+  "saleItems": [
+    {
+      "id": 789,
+      "saleId": 789,
+      "title": "Curso de Programação",
+      "unitPrice": "29900",
+      "quantity": 1,
+      "tangible": false
+    }
+  ],
+  "externalTransactionId": "103693454"
+}
+```
+
+### Campos do Postback por Transação
+
+<ParamField body="id" type="integer" required>
+  ID da transação (Sale ID)
+</ParamField>
+
+<ParamField body="userId" type="integer" required>
+  ID do usuário (vendedor)
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Valor da transação em centavos (formato string)
+</ParamField>
+
+<ParamField body="date" type="string" required>
+  Data de criação da transação (ISO 8601)
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status atual da transação. Valores possíveis: `PENDENTE`, `EM_PROCESSAMENTO`, `PAGO`, `CANCELADO`, `RECUSADO`, `ESTORNADO`, `FALHA`, `CHARGEBACK`, `MED`
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`
+</ParamField>
+
+<ParamField body="customerDocument" type="string">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customerEmail" type="string">
+  Email do cliente
+</ParamField>
+
+<ParamField body="customerName" type="string">
+  Nome completo do cliente
+</ParamField>
+
+<ParamField body="customerPhone" type="string">
+  Telefone do cliente (apenas dígitos)
+</ParamField>
+
+<ParamField body="pixKey" type="string">
+  Chave PIX gerada (apenas para pagamentos PIX)
+</ParamField>
+
+<ParamField body="boletoCode" type="string">
+  Código do boleto (apenas para pagamentos via boleto)
+</ParamField>
+
+<ParamField body="shipping" type="string">
+  Informações de entrega em formato JSON string (apenas para produtos físicos). `null` para produtos digitais.
+</ParamField>
+
+<ParamField body="saleItems" type="array" required>
+  Lista de itens da transação
+</ParamField>
+
+<ParamField body="externalTransactionId" type="string" required>
+  ID da transação no gateway de pagamento externo (adquirente). **Apenas no postback por transação.**
+</ParamField>
+
+## Comparação dos Formatos
+
+| Campo | Webhook Permanente | Postback por Transação |
+|-------|-------------------|----------------------|
+| `id` | ✅ | ✅ |
+| `userId` | ✅ | ✅ |
+| `amount` | ✅ | ✅ |
+| `date` | ✅ | ✅ |
+| `status` | ✅ | ✅ |
+| `paymentMethod` | ✅ | ✅ |
+| `customerDocument` | ✅ | ✅ |
+| `customerEmail` | ✅ | ✅ |
+| `customerName` | ✅ | ✅ |
+| `customerPhone` | ✅ | ✅ |
+| `pixKey` | ✅ | ✅ |
+| `boletoCode` | ✅ | ✅ |
+| `shipping` | ✅ | ✅ |
+| `saleItems` | ✅ | ✅ |
+| `fee` | ✅ | ❌ |
+| `transactionId` | ✅ | ❌ |
+| `type` | ✅ (`"TRANSACTION"`) | ❌ |
+| `externalTransactionId` | ❌ | ✅ |
+| **Assinatura HMAC** | ❌ | ✅ (`X-Signature` header) |
+
+## Quando as Notificações São Enviadas
+
+As notificações são enviadas quando a transação muda para um **status final**:
+
+- `PAGO` - Pagamento confirmado
+- `CANCELADO` - Transação cancelada
+- `RECUSADO` - Pagamento recusado
+- `ESTORNADO` - Valor estornado
+- `FALHA` - Falha no processamento
+- `CHARGEBACK` - Chargeback identificado (cartão)
+- `MED` - Mediação PIX iniciada
+
+**Nota:** Status intermediários como `PENDENTE` e `EM_PROCESSAMENTO` não geram notificações.
+
+## Exemplo de Implementação
+
+### Node.js/Express
+
+```javascript
+const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+// Postback por Transação (com validação HMAC)
+app.post('/webhook/transacao', (req, res) => {
+  const signature = req.headers['x-signature'];
+  const payload = req.body;
+  const secretKey = process.env.POSTBACK_SECRET_KEY;
+  
+  // Validar assinatura
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(JSON.stringify(payload));
+  const expectedSignature = hmac.digest('hex');
+  
+  // Comparação segura contra timing attacks
+  if (!crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
+  )) {
+    return res.status(401).json({ error: 'Assinatura inválida' });
+  }
+  
+  // Processar notificação
+  console.log('Transação atualizada:', {
+    id: payload.id,
+    status: payload.status,
+    amount: payload.amount
+  });
+  
+  res.status(200).json({ success: true });
+});
+
+// Webhook Permanente (sem validação HMAC)
+app.post('/webhook/permanente', (req, res) => {
+  const payload = req.body;
+  
+  // Processar notificação
+  console.log('Transação atualizada:', {
+    id: payload.id,
+    status: payload.status,
+    fee: payload.fee,
+    type: payload.type
+  });
+  
+  res.status(200).json({ success: true });
+});
+
+app.listen(3000);
+```
+
+### Python/Flask
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+import json
+import os
+
+app = Flask(__name__)
+
+def validate_signature(payload, signature, secret_key):
+    """
+    Valida a assinatura HMAC-SHA256.
+    IMPORTANTE: Não use sort_keys=True - o JSON deve ser stringificado
+    exatamente como enviado pelo ImperiumPay Gateway.
+    """
+    payload_json = json.dumps(payload, separators=(',', ':'))
+    expected_signature = hmac.new(
+        secret_key.encode('utf-8'),
+        payload_json.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(signature, expected_signature)
+
+# Postback por Transação (com validação HMAC)
+@app.route('/webhook/transacao', methods=['POST'])
+def webhook_transacao():
+    signature = request.headers.get('X-Signature')
+    payload = request.json
+    secret_key = os.environ.get('POSTBACK_SECRET_KEY')
+    
+    # Validar assinatura
+    if not validate_signature(payload, signature, secret_key):
+        return jsonify({'error': 'Assinatura inválida'}), 401
+    
+    # Processar notificação
+    print(f"Transação atualizada: {payload['id']} - {payload['status']}")
+    
+    return jsonify({'success': True}), 200
+
+# Webhook Permanente (sem validação HMAC)
+@app.route('/webhook/permanente', methods=['POST'])
+def webhook_permanente():
+    payload = request.json
+    
+    # Processar notificação
+    print(f"Transação atualizada: {payload['id']} - {payload['status']} - Fee: {payload['fee']}")
+    
+    return jsonify({'success': True}), 200
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+## Boas Práticas
+
+<Warning>
+**Importante:**
+- Sempre retorne HTTP 200 para indicar que a notificação foi recebida com sucesso
+- Implemente idempotência para evitar processamento duplicado
+- **Sempre valide a assinatura HMAC em postbacks por transação** antes de processar
+- Use comparação timing-safe para validar assinaturas (evita timing attacks)
+- Use HTTPS para proteger os dados em trânsito
+- Implemente retry logic no seu servidor caso a notificação falhe
+- Mantenha a chave `POSTBACK_SECRET_KEY` segura e nunca a exponha em código frontend
+</Warning>
+
+<Info>
+**Dica:** Para testar webhooks localmente, use ferramentas como [ngrok](https://ngrok.com) ou [localtunnel](https://localtunnel.github.io/www/) para expor seu servidor local.
+</Info>
+

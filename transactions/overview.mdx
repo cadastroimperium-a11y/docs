@@ -1,0 +1,79 @@
+---
+title: Visão Geral
+description: Entenda como funcionam as transações na API ImperiumPay Gateway
+icon: "credit-card"
+---
+
+Processe pagamentos de forma simples e segura com múltiplos métodos de pagamento.
+
+<Note>
+  **Importante:** Todos os valores na API são representados em **centavos**. 
+  
+  Exemplo: R$ 100,00 = `10000`
+</Note>
+
+## Métodos de Pagamento Suportados
+
+<CardGroup cols={2}>
+  <Card title="PIX" icon="zap">
+    Pagamento instantâneo via QR Code
+  </Card>
+  <Card title="Cartão de Crédito" icon="credit-card">
+    Com suporte a parcelamento
+  </Card>
+  <Card title="Cartão de Débito" icon="credit-card">
+    Débito online
+  </Card>
+  <Card title="Boleto" icon="file-text">
+    Pagamento bancário tradicional
+  </Card>
+</CardGroup>
+
+## Status de Transação
+
+As transações podem ter os seguintes status:
+
+| Status | Descrição | Quando Ocorre | Método de Pagamento |
+|--------|-----------|---------------|---------------------|
+| `PENDENTE` | Aguardando pagamento | Status inicial para PIX/Boleto, aguardando confirmação | PIX, Boleto |
+| `EM_PROCESSAMENTO` | Processando pagamento | Cartão sendo processado pelo gateway | Cartão |
+| `PAGO` | Pagamento confirmado | Pagamento aprovado e confirmado | Todos |
+| `CANCELADO` | Transação cancelada | Cancelada antes do pagamento ou por expiração | Todos |
+| `RECUSADO` | Pagamento recusado | Cartão recusado pelo banco/gateway | Cartão |
+| `ESTORNADO` | Valor estornado | Pagamento revertido e devolvido ao cliente | Todos |
+| `FALHA` | Falha no processamento | Erro técnico no processamento | Todos |
+| `CHARGEBACK` | Chargeback identificado | Cliente contestou transação com cartão | **Apenas Cartão** |
+| `MED` | Em mediação PIX | Cliente contestou transação via MED do PIX | **Apenas PIX** |
+
+Para mais detalhes sobre cada status e seus contextos, consulte a [documentação completa de status](/transactions/response-objects#status-das-transações).
+
+## Fluxo de uma Transação
+
+<Steps>
+  <Step title="Criar Transação">
+    Você cria uma transação via API com os dados do cliente e produtos
+  </Step>
+  <Step title="Processar Pagamento">
+    O cliente realiza o pagamento através do método escolhido
+  </Step>
+  <Step title="Confirmação">
+    O pagamento é confirmado e o status é atualizado
+  </Step>
+  <Step title="Notificação">
+    Você recebe uma notificação via webhook sobre a mudança de status
+  </Step>
+</Steps>
+
+## Valores
+
+Todos os valores na API são representados em **centavos**. Por exemplo:
+
+- R$ 10,00 = `1000`
+- R$ 100,50 = `10050`
+- R$ 1.000,00 = `100000`
+
+## Próximos Passos
+
+- [Criar uma transação](/transactions/create)
+- [Buscar uma transação](/transactions/get)
+

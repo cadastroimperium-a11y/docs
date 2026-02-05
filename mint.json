@@ -1,0 +1,96 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "theme": "quill",
+  "colors": {
+    "primary": "#9F7032",
+    "light": "#07C983",
+    "dark": "#0A6B52",
+    "background": {
+      "dark": "#0F1419"
+    }
+  },
+  "name": "ImperiumPay Gateway API",
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png"
+  },
+  "favicon": "/logo/favicon.png",
+
+  "openapi": "/openapi.json",
+  "api": {
+    "baseUrl": "https://api.imperiumpay.com.br",
+    "auth": {
+      "method": "key",
+      "name": "X-Api-Public-Key",
+      "inputPrefix": "pk_"
+    },
+    "playground": {
+      "mode": "show"
+    }
+  },
+  "navigation": [
+    {
+      "group": "Começando",
+      "icon": "rocket",
+      "pages": [
+        "introduction",
+        "authentication"
+      ]
+    },
+    {
+      "group": "MCP (Model Context Protocol)",
+      "icon": "brain-circuit",
+      "pages": [
+        "llm-mcp/mcp"
+      ]
+    },
+    {
+      "group": "Transações",
+      "icon": "credit-card",
+      "pages": [
+        "transactions/overview",
+        "transactions/response-objects",
+        "transactions/create",
+        "transactions/get",
+        "transactions/webhooks"
+      ]
+    },
+    {
+      "group": "Transferências",
+      "icon": "arrow-right-arrow-left",
+      "pages": [
+        "transfers/overview",
+        "transfers/response-objects",
+        "transfers/create"
+      ]
+    },
+    {
+      "group": "Saldo",
+      "icon": "wallet",
+      "pages": [
+        "balance/get"
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "topbarLinks": [
+    {
+      "name": "Suporte",
+      "url": "mailto:adm@imperiumpay.com.br"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://app.imperiumpay.com.br"
+  },
+  "footer": {
+    "socials": {
+      "instagram": "https://instagram.com/imperiumpay"
+    }
+  }
+}

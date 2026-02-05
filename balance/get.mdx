@@ -1,0 +1,110 @@
+---
+title: "Obter Saldo Disponível"
+description: "Como obter o saldo disponível na sua conta via API pública"
+api: "GET https://api.imperiumpay.com.br/api/public/balance"
+---
+
+Obtém o saldo disponível, bloqueado e total da sua conta usando chaves de API.
+
+<Endpoint method="get" url="/api/public/balance" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys:
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Exemplo de Requisição
+
+<RequestExample>
+
+```bash cURL
+curl -X GET https://api.imperiumpay.com.br/api/public/balance \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json"
+```
+
+</RequestExample>
+
+## Resposta de Sucesso
+
+<ResponseField name="available" type="integer" required>
+  Saldo disponível em centavos (valor que pode ser usado para transferências)
+</ResponseField>
+
+<ResponseField name="blocked" type="integer" required>
+  Saldo bloqueado em centavos (valor reservado para operações pendentes, MEDs, etc.)
+</ResponseField>
+
+<ResponseField name="total" type="integer" required>
+  Saldo total em centavos (soma de available + blocked)
+</ResponseField>
+
+### Exemplo de Resposta
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "available": 3153900,
+  "blocked": 0,
+  "total": 2653900
+}
+```
+
+</ResponseExample>
+
+<Note>
+  Todos os valores são retornados em **centavos** (inteiros). Para converter para reais, divida por 100:
+
+  - `3153900` centavos = R\$ 31.539,00
+  - `0` centavos = R\$ 0,00
+  - `2653900` centavos = R\$ 26.539,00
+</Note>
+
+## Códigos de Erro
+
+### 401 Unauthorized
+
+Não autorizado - API Key ou API Secret inválidos ou ausentes.
+
+<ResponseExample>
+
+```json Error - 401 Unauthorized
+{
+  "error": "Não autorizado",
+  "message": "Autenticação necessária. Verifique suas chaves de API."
+}
+```
+
+</ResponseExample>
+
+### 500 Internal Server Error
+
+Erro interno do servidor.
+
+<ResponseExample>
+
+```json Error - 500 Internal Server Error
+{
+  "error": "Erro interno do servidor",
+  "message": "Falha ao obter saldo. Tente novamente mais tarde."
+}
+```
+
+</ResponseExample>
+
+## Observações Importantes
+
+- **Valores em centavos**: Todos os valores retornados estão em centavos (inteiros)
+- **Saldo disponível**: Valor que pode ser usado para transferências (cashout)
+- **Saldo bloqueado**: Valor reservado para operações pendentes, MEDs abertos, etc.
+- **Saldo total**: Soma de `available + blocked`
+- Se o usuário não tiver saldo cadastrado, será criado automaticamente com valores zerados
