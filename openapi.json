@@ -221,6 +221,116 @@
             "type": "string"
           }
         }
+      },
+      "Seller": {
+        "type": "object",
+        "description": "Dados completos do seller (conta) autenticado pelas chaves de API",
+        "properties": {
+          "id": { "type": "integer", "description": "ID do usuário seller" },
+          "userId": { "type": "integer", "description": "ID do usuário" },
+          "legalName": { "type": "string", "description": "Nome legal ou razão social" },
+          "blocked": { "type": "boolean", "description": "Se a conta está bloqueada" },
+          "invoiceDescriptor": { "type": "string", "description": "Descriptor na fatura" },
+          "commercialName": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "uploadedDocuments": { "type": "boolean" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "email": { "type": "string" },
+              "phone": { "type": "string", "nullable": true },
+              "name": { "type": "string" },
+              "isEmailVerified": { "type": "boolean" },
+              "isPhoneVerified": { "type": "boolean" },
+              "isAdmin": { "type": "boolean" },
+              "isMaster": { "type": "boolean" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          },
+          "document": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "integer" },
+              "number": { "type": "string" },
+              "type": { "type": "string", "enum": ["cpf", "cnpj"] }
+            }
+          },
+          "permissions": {
+            "type": "object",
+            "properties": {
+              "isCreditCardAvailable": { "type": "boolean" },
+              "isBoletoAvailable": { "type": "boolean" },
+              "isPixAvailable": { "type": "boolean" },
+              "transferEnabled": { "type": "boolean" },
+              "transferPriceCents": { "type": "integer" },
+              "anticipationEnabled": { "type": "boolean" },
+              "anticipatableVolumePercentage": { "type": "number" },
+              "anticipationPricePercent": { "type": "number" },
+              "minAnticipatableDays": { "type": "integer" }
+            }
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "averageRevenue": { "type": "number" },
+              "averageTicket": { "type": "number" },
+              "physicalProducts": { "type": "boolean" },
+              "productsDescription": { "type": "string", "nullable": true },
+              "siteUrl": { "type": "string", "nullable": true },
+              "phone": { "type": "string", "nullable": true },
+              "email": { "type": "string", "nullable": true }
+            }
+          },
+          "legalRepresentative": { "type": "object", "nullable": true },
+          "address": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "street": { "type": "string" },
+              "streetNumber": { "type": "string" },
+              "zipCode": { "type": "string" },
+              "neighborhood": { "type": "string" },
+              "city": { "type": "string" },
+              "state": { "type": "string" },
+              "country": { "type": "string" }
+            }
+          },
+          "revenue": {
+            "type": "object",
+            "properties": {
+              "totalAmount": { "type": "integer", "description": "Em centavos" },
+              "totalCount": { "type": "integer" },
+              "cardAmount": { "type": "integer" },
+              "cardCount": { "type": "integer" },
+              "pixAmount": { "type": "integer" },
+              "pixCount": { "type": "integer" },
+              "boletoAmount": { "type": "integer" },
+              "boletoCount": { "type": "integer" },
+              "chargebackAmount": { "type": "integer" },
+              "chargebackCount": { "type": "integer" },
+              "refundAmount": { "type": "integer" },
+              "refundCount": { "type": "integer" }
+            }
+          },
+          "defaultRecipient": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "legalName": { "type": "string" },
+              "document": { "type": "object", "nullable": true },
+              "transferSettings": { "type": "object", "nullable": true },
+              "balance": {
+                "type": "object",
+                "properties": {
+                  "available": { "type": "integer", "description": "Saldo disponível em centavos" },
+                  "updatedAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -263,6 +373,66 @@
                 "example": {
                   "error": "Não autorizado",
                   "message": "Autenticação necessária. Verifique suas chaves de API."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller": {
+      "get": {
+        "summary": "Obter Dados do Seller",
+        "description": "Retorna os dados completos da conta do seller autenticado pelas chaves de API (X-Api-Public-Key e X-Api-Private-Key). Inclui dados cadastrais, permissões, endereço, representante legal, receita e saldo do recipient padrão.",
+        "operationId": "getSeller",
+        "tags": ["Seller"],
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "ApiSecretAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do seller retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Seller"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Não autorizado",
+                  "message": "Autenticação necessária. Verifique suas chaves de API."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conta não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1016,6 +1186,10 @@
     {
       "name": "Transfers",
       "description": "Operações relacionadas a transferências e saques"
+    },
+    {
+      "name": "Seller",
+      "description": "Dados da conta do seller (autenticado por API Key)"
     }
   ]
 }

@@ -70,6 +70,13 @@
       "pages": [
         "balance/get"
       ]
+    },
+    {
+      "group": "Seller",
+      "icon": "user",
+      "pages": [
+        "seller/get"
+      ]
     }
   ],
   "tabs": [

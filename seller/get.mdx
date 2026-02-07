@@ -1,0 +1,232 @@
+---
+title: "Obter Dados do Seller"
+description: "Como obter os dados completos da conta do seller via API (autenticado por API Key)"
+api: "GET https://api.imperiumpay.com.br/api/seller"
+---
+
+Retorna os dados completos da conta do seller autenticado pelas chaves de API (X-Api-Public-Key e X-Api-Private-Key). Inclui dados cadastrais, permissões, endereço, representante legal, receita por método de pagamento e saldo do recipient padrão.
+
+<Endpoint method="get" url="/api/seller" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys (mesmo esquema do saldo e transações):
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Exemplo de Requisição
+
+<RequestExample>
+
+```bash cURL
+curl -X GET https://api.imperiumpay.com.br/api/seller \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json"
+```
+
+</RequestExample>
+
+## Estrutura da Resposta
+
+A resposta inclui os seguintes blocos principais:
+
+<ResponseField name="id" type="integer" required>
+  ID do usuário seller
+</ResponseField>
+
+<ResponseField name="userId" type="integer" required>
+  ID do usuário (igual a id)
+</ResponseField>
+
+<ResponseField name="legalName" type="string" required>
+  Nome legal ou razão social (KYC ou nome do usuário)
+</ResponseField>
+
+<ResponseField name="user" type="object" required>
+  Dados do usuário: id, email, phone, name, isEmailVerified, isPhoneVerified, isAdmin, isMaster, createdAt
+</ResponseField>
+
+<ResponseField name="document" type="object">
+  Documento (CPF/CNPJ): id, number, type (cpf | cnpj). Pode ser null se não cadastrado
+</ResponseField>
+
+<ResponseField name="permissions" type="object" required>
+  Permissões e configurações: isCreditCardAvailable, isBoletoAvailable, isPixAvailable, transferEnabled, transferPriceCents, anticipationEnabled, anticipatableVolumePercentage, anticipationPricePercent, minAnticipatableDays
+</ResponseField>
+
+<ResponseField name="details" type="object">
+  Detalhes comerciais: averageRevenue, averageTicket, physicalProducts, productsDescription, siteUrl, phone, email
+</ResponseField>
+
+<ResponseField name="address" type="object">
+  Endereço: street, streetNumber, zipCode, neighborhood, city, state, country. Pode ser null
+</ResponseField>
+
+<ResponseField name="revenue" type="object" required>
+  Receita agregada: totalAmount/totalCount (centavos), cardAmount/cardCount, pixAmount/pixCount, boletoAmount/boletoCount, chargebackAmount/chargebackCount, refundAmount/refundCount
+</ResponseField>
+
+<ResponseField name="defaultRecipient" type="object" required>
+  Recipient padrão: id, legalName, document, transferSettings, balance (available em centavos, updatedAt)
+</ResponseField>
+
+<ResponseField name="blocked" type="boolean" required>
+  Se a conta está bloqueada
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  Data de criação da conta (ISO 8601)
+</ResponseField>
+
+### Exemplo de Resposta (resumido)
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "id": 1,
+  "userId": 1,
+  "legalName": "João Silva",
+  "blocked": false,
+  "invoiceDescriptor": "João",
+  "commercialName": null,
+  "createdAt": "2024-01-15T10:00:00.000Z",
+  "uploadedDocuments": true,
+  "user": {
+    "id": 1,
+    "email": "joao@exemplo.com",
+    "phone": "11999999999",
+    "name": "João Silva",
+    "isEmailVerified": true,
+    "isPhoneVerified": false,
+    "isAdmin": false,
+    "isMaster": false,
+    "createdAt": "2024-01-15T10:00:00.000Z"
+  },
+  "document": {
+    "id": 1,
+    "number": "12345678900",
+    "type": "cpf"
+  },
+  "permissions": {
+    "isCreditCardAvailable": true,
+    "isBoletoAvailable": true,
+    "isPixAvailable": true,
+    "transferEnabled": true,
+    "transferPriceCents": 0,
+    "anticipationEnabled": false,
+    "anticipatableVolumePercentage": 0,
+    "anticipationPricePercent": 0,
+    "minAnticipatableDays": 0
+  },
+  "details": {
+    "averageRevenue": 0,
+    "averageTicket": 0,
+    "physicalProducts": false,
+    "productsDescription": null,
+    "siteUrl": null,
+    "phone": null,
+    "email": null
+  },
+  "legalRepresentative": null,
+  "address": {
+    "street": "Rua Exemplo",
+    "streetNumber": "100",
+    "zipCode": "01310100",
+    "neighborhood": "Centro",
+    "city": "São Paulo",
+    "state": "SP",
+    "country": "Brasil"
+  },
+  "revenue": {
+    "totalAmount": 150000,
+    "totalCount": 10,
+    "cardAmount": 100000,
+    "cardCount": 8,
+    "pixAmount": 50000,
+    "pixCount": 2,
+    "boletoAmount": 0,
+    "boletoCount": 0,
+    "chargebackAmount": 0,
+    "chargebackCount": 0,
+    "refundAmount": 0,
+    "refundCount": 0
+  },
+  "defaultRecipient": {
+    "id": 1,
+    "legalName": "João Silva",
+    "document": { "number": "12345678900", "type": "cpf" },
+    "transferSettings": {},
+    "balance": {
+      "available": 3153900,
+      "updatedAt": "2024-02-01T12:00:00.000Z"
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+<Note>
+  Valores monetários em **revenue** e **defaultRecipient.balance.available** estão em **centavos** (inteiros). Para converter para reais, divida por 100.
+</Note>
+
+## Códigos de Erro
+
+### 401 Unauthorized
+
+Não autorizado — API Key ou API Secret inválidos ou ausentes.
+
+<ResponseExample>
+
+```json Error - 401 Unauthorized
+{
+  "error": "Não autorizado",
+  "message": "Autenticação necessária. Verifique suas chaves de API."
+}
+```
+
+</ResponseExample>
+
+### 404 Not Found
+
+Conta não encontrada para as chaves informadas.
+
+<ResponseExample>
+
+```json Error - 404 Not Found
+{
+  "error": "Conta não encontrada",
+  "message": "Nenhuma conta associada às chaves de API informadas."
+}
+```
+
+</ResponseExample>
+
+### 500 Internal Server Error
+
+Erro interno do servidor.
+
+<ResponseExample>
+
+```json Error - 500 Internal Server Error
+{
+  "error": "Erro interno do servidor",
+  "message": "Falha ao obter dados do seller. Tente novamente mais tarde."
+}
+```
+
+</ResponseExample>
+
+## Observações
+
+- **Autenticação**: O mesmo par de chaves usado em `/api/public/balance` e `/api/sales` deve ser usado aqui.
+- **Valores em centavos**: `revenue.*Amount` e `defaultRecipient.balance.available` são inteiros em centavos.
+- **Campos opcionais**: `document`, `address`, `legalRepresentative` podem ser `null` se não cadastrados no KYC.
