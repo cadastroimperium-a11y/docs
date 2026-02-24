@@ -1,0 +1,458 @@
+---
+title: "Criar Assinatura"
+description: "Crie uma nova assinatura recorrente através da API de vendas do ImperiumPay Gateway"
+api: "POST https://api.imperiumpay.com.br/api/sales"
+playground: true
+---
+
+Crie uma nova assinatura recorrente adicionando o bloco `subscription` na criação de uma transação. A assinatura será criada automaticamente após o processamento da venda.
+
+<Endpoint method="post" url="/api/sales" />
+
+## Autenticação
+
+Este endpoint requer autenticação via API Keys:
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+## Parâmetros do Body
+
+Além dos parâmetros padrão de criação de transação, inclua o bloco `subscription`:
+
+### Parâmetros de Assinatura
+
+<ParamField body="subscription" type="object" required>
+  Configuração da assinatura recorrente
+</ParamField>
+
+<ParamField body="subscription.enabled" type="boolean" required>
+  Define se a venda deve criar uma assinatura. Use `true` para criar assinatura.
+</ParamField>
+
+<ParamField body="subscription.billingCycle" type="string" required>
+  Ciclo de cobrança. Valores possíveis: `WEEKLY`, `BIWEEKLY`, `MONTHLY`, `QUARTERLY`, `SEMIANNUAL`, `YEARLY`
+</ParamField>
+
+<ParamField body="subscription.trialDays" type="integer">
+  Número de dias de período de teste gratuito (0-90). Padrão: `0`
+</ParamField>
+
+### Parâmetros Padrão da Transação
+
+<ParamField body="amount" type="integer" required>
+  Valor da assinatura em centavos (ex: 5000 = R\$ 50,00)
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `CREDIT_CARD`, `PIX`
+</ParamField>
+
+<ParamField body="customer" type="object" required>
+  Dados do cliente assinante
+</ParamField>
+
+<ParamField body="customer.name" type="string" required>
+  Nome completo do cliente
+</ParamField>
+
+<ParamField body="customer.email" type="string" required>
+  Email do cliente
+</ParamField>
+
+<ParamField body="customer.document" type="object">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customer.document.type" type="string">
+  Tipo do documento: `cpf` ou `cnpj`
+</ParamField>
+
+<ParamField body="customer.document.number" type="string">
+  Número do documento
+</ParamField>
+
+<ParamField body="customer.phone" type="string">
+  Telefone do cliente no formato 11999999999 (sem caracteres especiais)
+</ParamField>
+
+<ParamField body="items" type="array" required>
+  Lista de itens da assinatura
+</ParamField>
+
+<ParamField body="items[].title" type="string" required>
+  Nome do produto/plano
+</ParamField>
+
+<ParamField body="items[].unitPrice" type="integer" required>
+  Preço unitário em centavos
+</ParamField>
+
+<ParamField body="items[].quantity" type="integer" required>
+  Quantidade do item
+</ParamField>
+
+<ParamField body="items[].tangible" type="boolean" required>
+  Se o item é físico (`true`) ou digital (`false`)
+</ParamField>
+
+<ParamField body="card" type="object">
+  Informações do cartão (obrigatório para `CREDIT_CARD`)
+</ParamField>
+
+<ParamField body="postbackUrl" type="string">
+  URL para receber notificações de mudança de status
+</ParamField>
+
+<ResponseExample>
+
+```json Success - Assinatura PIX Pendente (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 4607,
+    "amount": "5000",
+    "status": "PENDENTE",
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.santos@example.com",
+      "document": "12345678900",
+      "phone": "5511999999999"
+    },
+    "payment": {
+      "method": "PIX",
+      "installments": null,
+      "pix": {
+        "key": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix...",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQ...",
+        "expiresAt": null
+      }
+    },
+    "shipping": null,
+    "createdAt": "2026-02-24T15:30:00.000Z",
+    "subscription": {
+      "id": 123,
+      "status": "PENDING",
+      "billingCycle": "MONTHLY",
+      "amount": 5000,
+      "nextBillingDate": "2026-03-24T15:30:00.000Z",
+      "trialEndsAt": null,
+      "customerEmail": "joao.santos@example.com",
+      "customerName": "João Silva Santos"
+    }
+  }
+}
+```
+
+```json Success - Assinatura com Trial (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 4608,
+    "amount": "9900",
+    "status": "PENDENTE",
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "Maria Oliveira",
+      "email": "maria@example.com",
+      "document": "98765432100",
+      "phone": "5511988887777"
+    },
+    "payment": {
+      "method": "PIX",
+      "installments": null,
+      "pix": {
+        "key": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix...",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQ...",
+        "expiresAt": null
+      }
+    },
+    "shipping": null,
+    "createdAt": "2026-02-24T15:30:00.000Z",
+    "subscription": {
+      "id": 124,
+      "status": "PENDING",
+      "billingCycle": "MONTHLY",
+      "amount": 9900,
+      "nextBillingDate": "2026-03-31T15:30:00.000Z",
+      "trialEndsAt": "2026-03-03T15:30:00.000Z",
+      "customerEmail": "maria@example.com",
+      "customerName": "Maria Oliveira"
+    }
+  }
+}
+```
+
+```json Success - Assinatura Cartão de Crédito (201 Created)
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 4609,
+    "amount": "19900",
+    "status": "PAGO",
+    "paymentMethod": "CREDIT_CARD",
+    "customer": {
+      "name": "Carlos Pereira",
+      "email": "carlos@example.com",
+      "document": "11122233344",
+      "phone": "5511977776666"
+    },
+    "payment": {
+      "method": "CREDIT_CARD",
+      "installments": 1,
+      "card": {
+        "lastDigits": "1111",
+        "brand": "VISA"
+      }
+    },
+    "shipping": null,
+    "createdAt": "2026-02-24T15:30:00.000Z",
+    "subscription": {
+      "id": 125,
+      "status": "ACTIVE",
+      "billingCycle": "YEARLY",
+      "amount": 19900,
+      "nextBillingDate": "2027-02-24T15:30:00.000Z",
+      "trialEndsAt": null,
+      "customerEmail": "carlos@example.com",
+      "customerName": "Carlos Pereira"
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+<RequestExample>
+
+```bash Assinatura Mensal - PIX
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "João Silva Santos",
+      "email": "joao.silva@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "12345678900"
+      },
+      "phone": "11999999999"
+    },
+    "items": [
+      {
+        "title": "Assinatura Premium Mensal",
+        "unitPrice": 5000,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "subscription": {
+      "enabled": true,
+      "billingCycle": "MONTHLY",
+      "trialDays": 0
+    },
+    "postbackUrl": "https://seusite.com.br/webhook/assinatura"
+  }'
+```
+
+```bash Assinatura com 7 dias de Trial
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 9900,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "Maria Oliveira",
+      "email": "maria@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "98765432100"
+      },
+      "phone": "11988887777"
+    },
+    "items": [
+      {
+        "title": "Plano Pro - 7 dias grátis",
+        "unitPrice": 9900,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "subscription": {
+      "enabled": true,
+      "billingCycle": "MONTHLY",
+      "trialDays": 7
+    },
+    "postbackUrl": "https://seusite.com.br/webhook/assinatura"
+  }'
+```
+
+```bash Assinatura Anual - Cartão de Crédito
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 19900,
+    "paymentMethod": "CREDIT_CARD",
+    "customer": {
+      "name": "Carlos Pereira",
+      "email": "carlos@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "11122233344"
+      },
+      "phone": "11977776666"
+    },
+    "card": {
+      "number": "4111111111111111",
+      "holderName": "CARLOS PEREIRA",
+      "expirationMonth": "12",
+      "expirationYear": "2028",
+      "cvv": "123"
+    },
+    "items": [
+      {
+        "title": "Assinatura Anual Premium",
+        "unitPrice": 19900,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "subscription": {
+      "enabled": true,
+      "billingCycle": "YEARLY",
+      "trialDays": 0
+    },
+    "postbackUrl": "https://seusite.com.br/webhook/assinatura"
+  }'
+```
+
+```bash Assinatura Trimestral
+curl -X POST https://api.imperiumpay.com.br/api/sales \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 14700,
+    "paymentMethod": "PIX",
+    "customer": {
+      "name": "Ana Costa",
+      "email": "ana@exemplo.com.br",
+      "document": {
+        "type": "cpf",
+        "number": "55566677788"
+      },
+      "phone": "11966665555"
+    },
+    "items": [
+      {
+        "title": "Plano Trimestral - Economia de 10%",
+        "unitPrice": 14700,
+        "quantity": 1,
+        "tangible": false
+      }
+    ],
+    "subscription": {
+      "enabled": true,
+      "billingCycle": "QUARTERLY",
+      "trialDays": 0
+    },
+    "postbackUrl": "https://seusite.com.br/webhook/assinatura"
+  }'
+```
+
+</RequestExample>
+
+## Fluxo de Status da Assinatura
+
+Após criar uma transação com assinatura:
+
+1. **Assinatura criada com status `PENDING`** - Aguardando primeiro pagamento
+2. **Pagamento confirmado** - Status muda para:
+   - `ACTIVE` se não houver período de trial
+   - `TRIALING` se houver período de trial configurado
+3. **Cobranças recorrentes** - Processadas automaticamente no ciclo definido
+
+<Info>
+  **Nota:** A assinatura só é ativada após a confirmação do primeiro pagamento. Para PIX, isso ocorre quando o cliente efetua o pagamento. Para cartão de crédito, ocorre imediatamente se aprovado.
+</Info>
+
+## Códigos de Erro
+
+<ResponseExample>
+
+```json Error - 400 Bad Request (billingCycle obrigatório)
+{
+  "message": "Campos obrigatórios faltando",
+  "error": "Dados inválidos",
+  "details": {
+    "missingFields": ["subscription.billingCycle"]
+  }
+}
+```
+
+</ResponseExample>
+
+<ResponseExample>
+
+```json Error - 400 Bad Request (ciclo inválido)
+{
+  "message": "Erro de validação",
+  "error": "Dados inválidos",
+  "details": {
+    "field": "subscription.billingCycle",
+    "message": "Ciclo de cobrança inválido. Use: WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, SEMIANNUAL ou YEARLY"
+  }
+}
+```
+
+</ResponseExample>
+
+<ResponseExample>
+
+```json Error - 400 Bad Request (trial inválido)
+{
+  "message": "Erro de validação",
+  "error": "Dados inválidos",
+  "details": {
+    "field": "subscription.trialDays",
+    "message": "Período de trial deve ser entre 0 e 90 dias"
+  }
+}
+```
+
+</ResponseExample>
+
+### Status HTTP
+
+| Código | Descrição |
+| ------ | --------- |
+| `201` | Venda e assinatura criadas com sucesso |
+| `400` | Dados inválidos ou campos obrigatórios faltando |
+| `401` | Não autorizado - Chaves de API inválidas |
+| `422` | Erro de validação |
+| `500` | Erro interno do servidor |
+
+## Diferença entre Venda Normal e Assinatura
+
+A única diferença entre criar uma venda normal e uma assinatura é a inclusão do bloco `subscription`:
+
+| Aspecto | Venda Normal | Assinatura |
+|---------|--------------|------------|
+| Bloco `subscription` | Não incluir | Incluir com `enabled: true` |
+| Cobrança | Única | Recorrente automática |
+| Status inicial | `PENDENTE` | `PENDING` (assinatura) |
+| Próximas cobranças | Manual | Automática |

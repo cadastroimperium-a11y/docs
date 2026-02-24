@@ -1,0 +1,437 @@
+---
+title: Objetos de Resposta
+description: Estrutura dos objetos retornados pelas APIs de assinaturas
+---
+
+## Objeto Subscription
+
+Estrutura completa de uma assinatura retornada pela API:
+
+```json
+{
+  "id": 123,
+  "status": "ACTIVE",
+  "billingCycle": "MONTHLY",
+  "amount": 5000,
+  "nextBillingDate": "2026-03-24T15:30:00.000Z",
+  "trialEndsAt": null,
+  "startedAt": "2026-02-24T15:30:00.000Z",
+  "cancelledAt": null,
+  "customerEmail": "joao.santos@example.com",
+  "customerName": "João Silva Santos",
+  "customerDocument": "12345678900",
+  "customerPhone": "5511999999999",
+  "paymentMethod": "PIX",
+  "lastPaymentDate": "2026-02-24T15:30:00.000Z",
+  "lastPaymentStatus": "PAGO",
+  "totalBillings": 1,
+  "successfulBillings": 1,
+  "failedBillings": 0,
+  "product": {
+    "id": 456,
+    "name": "Assinatura Premium Mensal"
+  },
+  "metadata": {
+    "itemTitle": "Assinatura Premium Mensal",
+    "customerPhone": "5511999999999"
+  },
+  "createdAt": "2026-02-24T15:30:00.000Z",
+  "updatedAt": "2026-02-24T15:35:00.000Z"
+}
+```
+
+### Campos
+
+<ParamField body="id" type="integer" required>
+  ID único da assinatura
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status atual da assinatura. Valores possíveis: `PENDING`, `ACTIVE`, `TRIALING`, `PAUSED`, `CANCELLED`, `PAST_DUE`, `EXPIRED`
+</ParamField>
+
+<ParamField body="billingCycle" type="string" required>
+  Ciclo de cobrança. Valores possíveis: `WEEKLY`, `BIWEEKLY`, `MONTHLY`, `QUARTERLY`, `SEMIANNUAL`, `YEARLY`
+</ParamField>
+
+<ParamField body="amount" type="integer" required>
+  Valor da assinatura em centavos (ex: 5000 = R$ 50,00)
+</ParamField>
+
+<ParamField body="nextBillingDate" type="string" required>
+  Data da próxima cobrança (ISO 8601). `null` se cancelada ou expirada.
+</ParamField>
+
+<ParamField body="trialEndsAt" type="string">
+  Data de término do período de trial (ISO 8601). `null` se não houver trial.
+</ParamField>
+
+<ParamField body="startedAt" type="string">
+  Data de início da assinatura (ISO 8601). `null` se ainda não ativada.
+</ParamField>
+
+<ParamField body="cancelledAt" type="string">
+  Data de cancelamento (ISO 8601). `null` se não cancelada.
+</ParamField>
+
+<ParamField body="customerEmail" type="string" required>
+  Email do cliente assinante
+</ParamField>
+
+<ParamField body="customerName" type="string" required>
+  Nome completo do cliente assinante
+</ParamField>
+
+<ParamField body="customerDocument" type="string">
+  Documento do cliente (CPF ou CNPJ)
+</ParamField>
+
+<ParamField body="customerPhone" type="string">
+  Telefone do cliente
+</ParamField>
+
+<ParamField body="paymentMethod" type="string" required>
+  Método de pagamento. Valores possíveis: `PIX`, `CREDIT_CARD`
+</ParamField>
+
+<ParamField body="lastPaymentDate" type="string">
+  Data do último pagamento (ISO 8601). `null` se nunca houve pagamento.
+</ParamField>
+
+<ParamField body="lastPaymentStatus" type="string">
+  Status do último pagamento. Valores possíveis: `PAGO`, `PENDENTE`, `RECUSADO`, `FALHA`
+</ParamField>
+
+<ParamField body="totalBillings" type="integer" required>
+  Total de cobranças realizadas
+</ParamField>
+
+<ParamField body="successfulBillings" type="integer" required>
+  Total de cobranças bem-sucedidas
+</ParamField>
+
+<ParamField body="failedBillings" type="integer" required>
+  Total de cobranças que falharam
+</ParamField>
+
+<ParamField body="product" type="object">
+  Dados do produto associado à assinatura
+</ParamField>
+
+<ParamField body="product.id" type="integer">
+  ID do produto
+</ParamField>
+
+<ParamField body="product.name" type="string">
+  Nome do produto
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Metadados adicionais da assinatura
+</ParamField>
+
+<ParamField body="createdAt" type="string" required>
+  Data de criação da assinatura (ISO 8601)
+</ParamField>
+
+<ParamField body="updatedAt" type="string" required>
+  Data da última atualização (ISO 8601)
+</ParamField>
+
+---
+
+## Objeto Subscription na Resposta de Criação
+
+Ao criar uma transação com assinatura, os dados da assinatura são retornados dentro do objeto `sale.subscription`:
+
+```json
+{
+  "message": "Venda criada com sucesso",
+  "sale": {
+    "id": 4607,
+    "amount": "5000",
+    "status": "PENDENTE",
+    "paymentMethod": "PIX",
+    "customer": { ... },
+    "payment": { ... },
+    "createdAt": "2026-02-24T15:30:00.000Z",
+    "subscription": {
+      "id": 123,
+      "status": "PENDING",
+      "billingCycle": "MONTHLY",
+      "amount": 5000,
+      "nextBillingDate": "2026-03-24T15:30:00.000Z",
+      "trialEndsAt": null,
+      "customerEmail": "joao.santos@example.com",
+      "customerName": "João Silva Santos"
+    }
+  }
+}
+```
+
+### Campos do sale.subscription
+
+<ParamField body="id" type="integer" required>
+  ID único da assinatura criada
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Status inicial da assinatura (geralmente `PENDING` para PIX, `ACTIVE` para cartão aprovado)
+</ParamField>
+
+<ParamField body="billingCycle" type="string" required>
+  Ciclo de cobrança configurado
+</ParamField>
+
+<ParamField body="amount" type="integer" required>
+  Valor da assinatura em centavos
+</ParamField>
+
+<ParamField body="nextBillingDate" type="string" required>
+  Data da próxima cobrança (ISO 8601)
+</ParamField>
+
+<ParamField body="trialEndsAt" type="string">
+  Data de término do trial (ISO 8601). `null` se não houver trial.
+</ParamField>
+
+<ParamField body="customerEmail" type="string" required>
+  Email do cliente assinante
+</ParamField>
+
+<ParamField body="customerName" type="string" required>
+  Nome do cliente assinante
+</ParamField>
+
+<Info>
+  **Nota:** O campo `subscription` só estará presente na resposta quando `subscription.enabled: true` for enviado na requisição.
+</Info>
+
+---
+
+## Objeto Metrics
+
+Retornado pelo endpoint de métricas de assinaturas:
+
+```json
+{
+  "total": 150,
+  "active": 120,
+  "cancelled": 25,
+  "paused": 5,
+  "mrr": 6000.00,
+  "arr": 72000.00,
+  "churnRate": 2.5
+}
+```
+
+### Campos das Métricas
+
+<ParamField body="total" type="integer" required>
+  Total de assinaturas criadas
+</ParamField>
+
+<ParamField body="active" type="integer" required>
+  Quantidade de assinaturas ativas (status `ACTIVE` ou `TRIALING`)
+</ParamField>
+
+<ParamField body="cancelled" type="integer" required>
+  Quantidade de assinaturas canceladas
+</ParamField>
+
+<ParamField body="paused" type="integer" required>
+  Quantidade de assinaturas pausadas
+</ParamField>
+
+<ParamField body="mrr" type="number" required>
+  Monthly Recurring Revenue - Receita mensal recorrente em reais (R$)
+</ParamField>
+
+<ParamField body="arr" type="number" required>
+  Annual Recurring Revenue - Receita anual recorrente em reais (R$)
+</ParamField>
+
+<ParamField body="churnRate" type="number" required>
+  Taxa de cancelamento em porcentagem (%)
+</ParamField>
+
+<Info>
+  **Nota:** Os valores de `mrr` e `arr` são retornados em **reais** (não em centavos), já formatados para exibição.
+</Info>
+
+---
+
+## Status das Assinaturas
+
+O campo `status` indica o estado atual da assinatura no sistema. Abaixo estão todos os status possíveis:
+
+### PENDING
+
+**Quando ocorre:**
+- Assinatura criada e aguardando primeiro pagamento
+- Status inicial após criação da transação com assinatura
+
+**O que significa:**
+- A assinatura foi criada com sucesso
+- Aguardando confirmação do primeiro pagamento
+- Cliente ainda não pagou ou pagamento está sendo processado
+
+**Próximos status possíveis:**
+- `ACTIVE` - Quando o pagamento for confirmado (sem trial)
+- `TRIALING` - Quando o pagamento for confirmado (com trial)
+- `CANCELLED` - Se cancelada antes do primeiro pagamento
+
+---
+
+### ACTIVE
+
+**Quando ocorre:**
+- Primeiro pagamento confirmado (sem período de trial)
+- Período de trial encerrado e cobrança confirmada
+- Assinatura reativada após pausa
+
+**O que significa:**
+- A assinatura está ativa e funcionando
+- Cobranças recorrentes serão processadas automaticamente
+- Cliente tem acesso ao produto/serviço
+
+**Próximos status possíveis:**
+- `PAUSED` - Se pausada manualmente
+- `CANCELLED` - Se cancelada
+- `PAST_DUE` - Se houver falha na cobrança
+- `EXPIRED` - Se atingir data de expiração
+
+---
+
+### TRIALING
+
+**Quando ocorre:**
+- Primeiro pagamento confirmado e há período de trial configurado
+- Cliente está no período de teste gratuito
+
+**O que significa:**
+- A assinatura está em período de trial
+- Cliente tem acesso ao produto/serviço sem cobrança
+- Primeira cobrança ocorrerá após término do trial
+
+**Próximos status possíveis:**
+- `ACTIVE` - Quando o trial terminar e cobrança for confirmada
+- `CANCELLED` - Se cancelada durante o trial
+- `PAST_DUE` - Se a cobrança pós-trial falhar
+
+---
+
+### PAUSED
+
+**Quando ocorre:**
+- Assinatura pausada manualmente pelo vendedor
+- Pausada por solicitação do cliente
+
+**O que significa:**
+- A assinatura está temporariamente suspensa
+- Nenhuma cobrança será processada
+- Cliente pode perder acesso ao produto/serviço
+
+**Próximos status possíveis:**
+- `ACTIVE` - Se reativada
+- `CANCELLED` - Se cancelada enquanto pausada
+
+---
+
+### CANCELLED
+
+**Quando ocorre:**
+- Cancelamento solicitado pelo vendedor ou cliente
+- Cancelamento automático após múltiplas falhas de cobrança
+- Cancelamento por política da plataforma
+
+**O que significa:**
+- A assinatura foi encerrada permanentemente
+- Nenhuma cobrança futura será processada
+- Cliente perde acesso ao produto/serviço
+
+**Próximos status possíveis:**
+- Nenhum (status final)
+
+---
+
+### PAST_DUE
+
+**Quando ocorre:**
+- Falha na cobrança recorrente
+- Cartão recusado ou PIX não pago
+- Múltiplas tentativas de cobrança falharam
+
+**O que significa:**
+- A assinatura está em atraso
+- Sistema tentará cobrar novamente
+- Cliente pode perder acesso temporariamente
+
+**Próximos status possíveis:**
+- `ACTIVE` - Se o pagamento for regularizado
+- `CANCELLED` - Se não for regularizado após período de graça
+
+---
+
+### EXPIRED
+
+**Quando ocorre:**
+- Assinatura atingiu data de expiração definida
+- Período contratado encerrou
+
+**O que significa:**
+- A assinatura chegou ao fim natural
+- Nenhuma cobrança futura será processada
+- Cliente perde acesso ao produto/serviço
+
+**Próximos status possíveis:**
+- Nenhum (status final)
+
+---
+
+## Fluxo de Status Típico
+
+### Assinatura sem Trial
+
+```text
+PENDING → ACTIVE → CANCELLED/EXPIRED
+              ↓
+          PAST_DUE → ACTIVE (regularizado)
+              ↓
+          CANCELLED (não regularizado)
+```
+
+### Assinatura com Trial
+
+```text
+PENDING → TRIALING → ACTIVE → CANCELLED/EXPIRED
+                        ↓
+                    PAST_DUE → ACTIVE (regularizado)
+                        ↓
+                    CANCELLED (não regularizado)
+```
+
+### Assinatura com Pausa
+
+```text
+ACTIVE → PAUSED → ACTIVE (reativada)
+            ↓
+        CANCELLED
+```
+
+---
+
+## Ciclos de Cobrança
+
+| Ciclo | Código | Intervalo | Exemplo |
+|-------|--------|-----------|---------|
+| Semanal | `WEEKLY` | 7 dias | Toda segunda-feira |
+| Quinzenal | `BIWEEKLY` | 14 dias | A cada 2 semanas |
+| Mensal | `MONTHLY` | 30 dias | Todo dia 15 |
+| Trimestral | `QUARTERLY` | 90 dias | Jan, Abr, Jul, Out |
+| Semestral | `SEMIANNUAL` | 180 dias | Jan, Jul |
+| Anual | `YEARLY` | 365 dias | Todo dia 1º de janeiro |
+
+<Info>
+  **Nota:** A data da próxima cobrança é calculada a partir da data do último pagamento confirmado, somando o intervalo do ciclo.
+</Info>

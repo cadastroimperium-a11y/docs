@@ -56,6 +56,17 @@
       ]
     },
     {
+      "group": "Assinaturas",
+      "icon": "sync",
+      "pages": [
+        "subscriptions/overview",
+        "subscriptions/create",
+        "subscriptions/manage",
+        "subscriptions/response-objects",
+        "subscriptions/webhooks"
+      ]
+    },
+    {
       "group": "Transferências",
       "icon": "arrow-right-arrow-left",
       "pages": [

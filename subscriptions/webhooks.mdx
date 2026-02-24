@@ -1,0 +1,511 @@
+---
+title: Webhooks de Assinatura
+description: Receba notificações sobre eventos de assinaturas via webhooks
+---
+
+O ImperiumPay Gateway envia notificações automáticas via webhook quando ocorrem eventos importantes nas suas assinaturas.
+
+## Eventos de Assinatura
+
+Os seguintes eventos geram notificações de webhook:
+
+| Evento | Descrição | Quando Ocorre |
+|--------|-----------|---------------|
+| `subscription.created` | Assinatura criada | Após criação da transação com assinatura |
+| `subscription.activated` | Assinatura ativada | Primeiro pagamento confirmado |
+| `subscription.trial_started` | Trial iniciado | Assinatura entra em período de trial |
+| `subscription.trial_ended` | Trial encerrado | Período de trial terminou |
+| `subscription.renewed` | Assinatura renovada | Cobrança recorrente bem-sucedida |
+| `subscription.payment_failed` | Falha no pagamento | Cobrança recorrente falhou |
+| `subscription.paused` | Assinatura pausada | Assinatura foi pausada |
+| `subscription.resumed` | Assinatura reativada | Assinatura foi reativada |
+| `subscription.cancelled` | Assinatura cancelada | Assinatura foi cancelada |
+| `subscription.expired` | Assinatura expirada | Período da assinatura encerrou |
+
+## Configuração
+
+Configure seu webhook no painel administrativo do ImperiumPay Gateway ou inclua o campo `postbackUrl` ao criar a transação com assinatura.
+
+<Info>
+  **Nota:** Se você configurar o `postbackUrl` na criação da transação, receberá notificações tanto da transação quanto da assinatura associada.
+</Info>
+
+## Formato da Notificação
+
+### Estrutura Base
+
+Todas as notificações de assinatura seguem esta estrutura:
+
+```json
+{
+  "event": "subscription.activated",
+  "timestamp": "2026-02-24T15:35:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-03-24T15:30:00.000Z",
+    "trialEndsAt": null,
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "customerDocument": "12345678900",
+    "customerPhone": "5511999999999",
+    "paymentMethod": "PIX",
+    "product": {
+      "id": 456,
+      "name": "Assinatura Premium Mensal"
+    }
+  },
+  "sale": {
+    "id": 4607,
+    "amount": 5000,
+    "status": "PAGO",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+### Campos
+
+<ParamField body="event" type="string" required>
+  Tipo do evento. Valores possíveis: `subscription.created`, `subscription.activated`, `subscription.trial_started`, `subscription.trial_ended`, `subscription.renewed`, `subscription.payment_failed`, `subscription.paused`, `subscription.resumed`, `subscription.cancelled`, `subscription.expired`
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  Data e hora do evento (ISO 8601)
+</ParamField>
+
+<ParamField body="subscription" type="object" required>
+  Dados da assinatura
+</ParamField>
+
+<ParamField body="subscription.id" type="integer" required>
+  ID único da assinatura
+</ParamField>
+
+<ParamField body="subscription.status" type="string" required>
+  Status atual da assinatura
+</ParamField>
+
+<ParamField body="subscription.billingCycle" type="string" required>
+  Ciclo de cobrança
+</ParamField>
+
+<ParamField body="subscription.amount" type="integer" required>
+  Valor da assinatura em centavos
+</ParamField>
+
+<ParamField body="subscription.nextBillingDate" type="string">
+  Data da próxima cobrança (ISO 8601)
+</ParamField>
+
+<ParamField body="subscription.trialEndsAt" type="string">
+  Data de término do trial (ISO 8601). `null` se não houver trial.
+</ParamField>
+
+<ParamField body="subscription.customerEmail" type="string" required>
+  Email do cliente
+</ParamField>
+
+<ParamField body="subscription.customerName" type="string" required>
+  Nome do cliente
+</ParamField>
+
+<ParamField body="subscription.customerDocument" type="string">
+  Documento do cliente (CPF/CNPJ)
+</ParamField>
+
+<ParamField body="subscription.customerPhone" type="string">
+  Telefone do cliente
+</ParamField>
+
+<ParamField body="subscription.paymentMethod" type="string" required>
+  Método de pagamento
+</ParamField>
+
+<ParamField body="subscription.product" type="object">
+  Dados do produto associado
+</ParamField>
+
+<ParamField body="sale" type="object">
+  Dados da transação associada (quando aplicável)
+</ParamField>
+
+---
+
+## Exemplos por Evento
+
+### subscription.created
+
+Enviado quando uma nova assinatura é criada (status `PENDING`):
+
+```json
+{
+  "event": "subscription.created",
+  "timestamp": "2026-02-24T15:30:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "PENDING",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-03-24T15:30:00.000Z",
+    "trialEndsAt": null,
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "paymentMethod": "PIX",
+    "product": {
+      "id": 456,
+      "name": "Assinatura Premium"
+    }
+  },
+  "sale": {
+    "id": 4607,
+    "amount": 5000,
+    "status": "PENDENTE",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+---
+
+### subscription.activated
+
+Enviado quando a assinatura é ativada após o primeiro pagamento:
+
+```json
+{
+  "event": "subscription.activated",
+  "timestamp": "2026-02-24T15:35:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-03-24T15:30:00.000Z",
+    "trialEndsAt": null,
+    "startedAt": "2026-02-24T15:35:00.000Z",
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "paymentMethod": "PIX",
+    "product": {
+      "id": 456,
+      "name": "Assinatura Premium"
+    }
+  },
+  "sale": {
+    "id": 4607,
+    "amount": 5000,
+    "status": "PAGO",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+---
+
+### subscription.trial_started
+
+Enviado quando a assinatura entra em período de trial:
+
+```json
+{
+  "event": "subscription.trial_started",
+  "timestamp": "2026-02-24T15:35:00.000Z",
+  "subscription": {
+    "id": 124,
+    "status": "TRIALING",
+    "billingCycle": "MONTHLY",
+    "amount": 9900,
+    "nextBillingDate": "2026-03-10T15:35:00.000Z",
+    "trialEndsAt": "2026-03-03T15:35:00.000Z",
+    "customerEmail": "maria@example.com",
+    "customerName": "Maria Oliveira",
+    "paymentMethod": "CREDIT_CARD",
+    "product": {
+      "id": 789,
+      "name": "Plano Pro - 7 dias grátis"
+    }
+  }
+}
+```
+
+---
+
+### subscription.trial_ended
+
+Enviado quando o período de trial termina:
+
+```json
+{
+  "event": "subscription.trial_ended",
+  "timestamp": "2026-03-03T15:35:00.000Z",
+  "subscription": {
+    "id": 124,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 9900,
+    "nextBillingDate": "2026-04-03T15:35:00.000Z",
+    "trialEndsAt": "2026-03-03T15:35:00.000Z",
+    "customerEmail": "maria@example.com",
+    "customerName": "Maria Oliveira",
+    "paymentMethod": "CREDIT_CARD"
+  },
+  "sale": {
+    "id": 4650,
+    "amount": 9900,
+    "status": "PAGO",
+    "paymentMethod": "CREDIT_CARD"
+  }
+}
+```
+
+---
+
+### subscription.renewed
+
+Enviado quando uma cobrança recorrente é bem-sucedida:
+
+```json
+{
+  "event": "subscription.renewed",
+  "timestamp": "2026-03-24T15:30:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-04-24T15:30:00.000Z",
+    "totalBillings": 2,
+    "successfulBillings": 2,
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "paymentMethod": "PIX"
+  },
+  "sale": {
+    "id": 4700,
+    "amount": 5000,
+    "status": "PAGO",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+---
+
+### subscription.payment_failed
+
+Enviado quando uma cobrança recorrente falha:
+
+```json
+{
+  "event": "subscription.payment_failed",
+  "timestamp": "2026-03-24T15:30:00.000Z",
+  "subscription": {
+    "id": 125,
+    "status": "PAST_DUE",
+    "billingCycle": "MONTHLY",
+    "amount": 19900,
+    "nextBillingDate": "2026-03-27T15:30:00.000Z",
+    "totalBillings": 2,
+    "successfulBillings": 1,
+    "failedBillings": 1,
+    "customerEmail": "carlos@example.com",
+    "customerName": "Carlos Pereira",
+    "paymentMethod": "CREDIT_CARD"
+  },
+  "failureReason": "Cartão recusado pelo banco emissor",
+  "retryScheduled": true,
+  "nextRetryDate": "2026-03-27T15:30:00.000Z"
+}
+```
+
+---
+
+### subscription.paused
+
+Enviado quando a assinatura é pausada:
+
+```json
+{
+  "event": "subscription.paused",
+  "timestamp": "2026-02-25T10:00:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "PAUSED",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": null,
+    "pausedAt": "2026-02-25T10:00:00.000Z",
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+---
+
+### subscription.resumed
+
+Enviado quando a assinatura é reativada:
+
+```json
+{
+  "event": "subscription.resumed",
+  "timestamp": "2026-03-01T10:00:00.000Z",
+  "subscription": {
+    "id": 123,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-04-01T10:00:00.000Z",
+    "resumedAt": "2026-03-01T10:00:00.000Z",
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "paymentMethod": "PIX"
+  }
+}
+```
+
+---
+
+### subscription.cancelled
+
+Enviado quando a assinatura é cancelada:
+
+```json
+{
+  "event": "subscription.cancelled",
+  "timestamp": "2026-02-28T18:00:00.000Z",
+  "subscription": {
+    "id": 126,
+    "status": "CANCELLED",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": null,
+    "cancelledAt": "2026-02-28T18:00:00.000Z",
+    "customerEmail": "ana@example.com",
+    "customerName": "Ana Costa",
+    "paymentMethod": "PIX"
+  },
+  "cancellationReason": "Solicitação do cliente"
+}
+```
+
+---
+
+### subscription.expired
+
+Enviado quando a assinatura expira:
+
+```json
+{
+  "event": "subscription.expired",
+  "timestamp": "2027-02-24T15:30:00.000Z",
+  "subscription": {
+    "id": 125,
+    "status": "EXPIRED",
+    "billingCycle": "YEARLY",
+    "amount": 19900,
+    "nextBillingDate": null,
+    "expiredAt": "2027-02-24T15:30:00.000Z",
+    "customerEmail": "carlos@example.com",
+    "customerName": "Carlos Pereira",
+    "paymentMethod": "CREDIT_CARD"
+  }
+}
+```
+
+---
+
+## Segurança
+
+<Warning>
+  **Importante:** Webhooks de assinatura incluem assinatura HMAC-SHA256 no header `X-Signature`. Sempre valide a assinatura antes de processar a notificação.
+</Warning>
+
+### Validação da Assinatura
+
+```javascript
+const crypto = require('crypto');
+
+function validateWebhookSignature(payload, signature, secretKey) {
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(JSON.stringify(payload));
+  const expectedSignature = hmac.digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
+  );
+}
+
+app.post('/webhook/subscription', (req, res) => {
+  const signature = req.headers['x-signature'];
+  const payload = req.body;
+  const secretKey = process.env.POSTBACK_SECRET_KEY;
+  
+  if (!validateWebhookSignature(payload, signature, secretKey)) {
+    return res.status(401).json({ error: 'Assinatura inválida' });
+  }
+  
+  // Processar evento
+  const { event, subscription } = payload;
+  
+  switch (event) {
+    case 'subscription.activated':
+      // Liberar acesso ao produto
+      break;
+    case 'subscription.cancelled':
+      // Revogar acesso ao produto
+      break;
+    case 'subscription.payment_failed':
+      // Notificar cliente sobre falha
+      break;
+    // ... outros eventos
+  }
+  
+  res.status(200).json({ success: true });
+});
+```
+
+---
+
+## Boas Práticas
+
+<CardGroup cols={2}>
+  <Card title="Retorne HTTP 200" icon="check">
+    Sempre retorne status 200 para indicar que recebeu a notificação
+  </Card>
+  <Card title="Valide a Assinatura" icon="shield-check">
+    Sempre valide o header X-Signature antes de processar
+  </Card>
+  <Card title="Idempotência" icon="repeat">
+    Implemente lógica idempotente para evitar duplicação
+  </Card>
+  <Card title="Processamento Assíncrono" icon="clock">
+    Processe webhooks de forma assíncrona para evitar timeouts
+  </Card>
+</CardGroup>
+
+<Info>
+  **Dica:** Armazene o `subscription.id` e `event` para implementar idempotência e evitar processar o mesmo evento duas vezes.
+</Info>
+
+---
+
+## Retry Policy
+
+Se o seu servidor não retornar HTTP 200, o ImperiumPay Gateway tentará reenviar a notificação:
+
+| Tentativa | Intervalo |
+|-----------|-----------|
+| 1ª | Imediata |
+| 2ª | 5 minutos |
+| 3ª | 30 minutos |
+| 4ª | 2 horas |
+| 5ª | 24 horas |
+
+Após 5 tentativas sem sucesso, a notificação é marcada como falha e não será reenviada.

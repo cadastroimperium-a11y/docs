@@ -1,0 +1,122 @@
+---
+title: Visão Geral
+description: Entenda como funcionam as assinaturas recorrentes na API ImperiumPay Gateway
+icon: "sync"
+---
+
+Gerencie cobranças recorrentes de forma simples e automatizada com o sistema de assinaturas do ImperiumPay Gateway.
+
+<Note>
+  **Importante:** Todos os valores na API são representados em **centavos**. 
+  
+  Exemplo: R$ 100,00 = `10000`
+</Note>
+
+## O que são Assinaturas?
+
+Assinaturas são cobranças recorrentes automáticas que permitem você cobrar seus clientes de forma periódica (semanal, mensal, trimestral, etc.) sem precisar criar uma nova transação manualmente a cada ciclo.
+
+<CardGroup cols={2}>
+  <Card title="Cobranças Automáticas" icon="rotate">
+    Cobranças processadas automaticamente no ciclo definido
+  </Card>
+  <Card title="Múltiplos Ciclos" icon="calendar">
+    Semanal, quinzenal, mensal, trimestral, semestral ou anual
+  </Card>
+  <Card title="Período de Trial" icon="clock">
+    Ofereça períodos de teste gratuitos de até 90 dias
+  </Card>
+  <Card title="Métricas SaaS" icon="chart-line">
+    MRR, ARR, Churn Rate e outras métricas em tempo real
+  </Card>
+</CardGroup>
+
+## Ciclos de Cobrança Disponíveis
+
+| Ciclo | Código | Intervalo |
+|-------|--------|-----------|
+| Semanal | `WEEKLY` | 7 dias |
+| Quinzenal | `BIWEEKLY` | 14 dias |
+| Mensal | `MONTHLY` | 30 dias |
+| Trimestral | `QUARTERLY` | 90 dias |
+| Semestral | `SEMIANNUAL` | 180 dias |
+| Anual | `YEARLY` | 365 dias |
+
+## Status de Assinatura
+
+As assinaturas podem ter os seguintes status:
+
+| Status | Descrição | Quando Ocorre |
+|--------|-----------|---------------|
+| `PENDING` | Aguardando primeiro pagamento | Status inicial após criação |
+| `ACTIVE` | Assinatura ativa | Após confirmação do primeiro pagamento |
+| `TRIALING` | Em período de trial | Quando há período de teste configurado |
+| `PAUSED` | Assinatura pausada | Pausada manualmente pelo vendedor |
+| `CANCELLED` | Assinatura cancelada | Cancelada pelo vendedor ou cliente |
+| `PAST_DUE` | Pagamento em atraso | Após falhas consecutivas de cobrança |
+| `EXPIRED` | Assinatura expirada | Período de assinatura encerrado |
+
+## Fluxo de uma Assinatura
+
+<Steps>
+  <Step title="Criar Transação com Assinatura">
+    Você cria uma transação via API incluindo o bloco `subscription` com `enabled: true`
+  </Step>
+  <Step title="Aguardar Pagamento">
+    A assinatura é criada com status `PENDING` aguardando o primeiro pagamento
+  </Step>
+  <Step title="Ativação">
+    Após confirmação do pagamento, a assinatura muda para `ACTIVE` (ou `TRIALING` se houver trial)
+  </Step>
+  <Step title="Cobranças Recorrentes">
+    O sistema processa automaticamente as cobranças no ciclo definido
+  </Step>
+  <Step title="Notificações">
+    Você recebe webhooks sobre mudanças de status e cobranças
+  </Step>
+</Steps>
+
+## Métodos de Pagamento Suportados
+
+<CardGroup cols={2}>
+  <Card title="PIX" icon="zap">
+    Pagamento recorrente via PIX
+  </Card>
+  <Card title="Cartão de Crédito" icon="credit-card">
+    Cobrança automática no cartão tokenizado
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Importante sobre Cartão de Crédito:** Para assinaturas com cartão, os dados do cartão são tokenizados de forma segura (PCI DSS compliant) e armazenados para cobranças futuras. Apenas os últimos 4 dígitos e a bandeira são visíveis.
+</Warning>
+
+## Período de Trial
+
+Você pode oferecer um período de teste gratuito para seus clientes:
+
+- **Mínimo:** 0 dias (sem trial)
+- **Máximo:** 90 dias
+- Durante o trial, a assinatura fica com status `TRIALING`
+- A primeira cobrança ocorre após o término do período de trial
+- O cliente pode cancelar durante o trial sem ser cobrado
+
+## Métricas Disponíveis
+
+O sistema calcula automaticamente métricas SaaS importantes:
+
+| Métrica | Descrição |
+|---------|-----------|
+| **MRR** | Monthly Recurring Revenue - Receita mensal recorrente |
+| **ARR** | Annual Recurring Revenue - Receita anual recorrente |
+| **Churn Rate** | Taxa de cancelamento de assinaturas |
+| **Total** | Total de assinaturas criadas |
+| **Ativas** | Quantidade de assinaturas ativas |
+| **Canceladas** | Quantidade de assinaturas canceladas |
+
+## Próximos Passos
+
+- [Criar uma assinatura](/subscriptions/create)
+- [Gerenciar assinaturas](/subscriptions/manage)
+- [Objetos de resposta](/subscriptions/response-objects)
+- [Webhooks de assinatura](/subscriptions/webhooks)

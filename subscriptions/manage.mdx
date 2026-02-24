@@ -1,0 +1,478 @@
+---
+title: "Gerenciar Assinaturas"
+description: "Consulte, liste, pause, reative e cancele assinaturas via API"
+---
+
+Gerencie suas assinaturas através dos endpoints disponíveis na API do ImperiumPay Gateway.
+
+## Listar Assinaturas
+
+Liste todas as assinaturas do usuário autenticado com filtros e paginação.
+
+<Endpoint method="get" url="/api/subscriptions" />
+
+### Autenticação
+
+<ParamField header="X-Api-Public-Key" type="string" required>
+  Sua chave pública da API
+</ParamField>
+
+<ParamField header="X-Api-Private-Key" type="string" required>
+  Sua chave privada da API
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="status" type="string">
+  Filtrar por status. Valores possíveis: `PENDING`, `ACTIVE`, `TRIALING`, `PAUSED`, `CANCELLED`, `PAST_DUE`, `EXPIRED`
+</ParamField>
+
+<ParamField query="search" type="string">
+  Buscar por email ou nome do cliente
+</ParamField>
+
+<ParamField query="startDate" type="string">
+  Data inicial para filtro (formato: `YYYY-MM-DD`). Considera timezone de Brasília (UTC-3).
+</ParamField>
+
+<ParamField query="endDate" type="string">
+  Data final para filtro (formato: `YYYY-MM-DD`). Considera timezone de Brasília (UTC-3).
+</ParamField>
+
+<ParamField query="page" type="integer">
+  Número da página (padrão: 1)
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Itens por página (padrão: 20, máximo: 100)
+</ParamField>
+
+<RequestExample>
+
+```bash Listar todas as assinaturas
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+```bash Filtrar por status ACTIVE
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions?status=ACTIVE" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+```bash Buscar por email do cliente
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions?search=joao@example.com" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+```bash Filtrar por período
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions?startDate=2026-01-01&endDate=2026-02-28" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+```bash Com paginação
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions?page=2&limit=50" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "success": true,
+  "data": {
+    "subscriptions": [
+      {
+        "id": 123,
+        "status": "ACTIVE",
+        "billingCycle": "MONTHLY",
+        "amount": 5000,
+        "nextBillingDate": "2026-03-24T15:30:00.000Z",
+        "trialEndsAt": null,
+        "customerEmail": "joao.santos@example.com",
+        "customerName": "João Silva Santos",
+        "paymentMethod": "PIX",
+        "product": {
+          "id": 456,
+          "name": "Assinatura Premium"
+        },
+        "createdAt": "2026-02-24T15:30:00.000Z"
+      },
+      {
+        "id": 124,
+        "status": "TRIALING",
+        "billingCycle": "MONTHLY",
+        "amount": 9900,
+        "nextBillingDate": "2026-03-31T15:30:00.000Z",
+        "trialEndsAt": "2026-03-03T15:30:00.000Z",
+        "customerEmail": "maria@example.com",
+        "customerName": "Maria Oliveira",
+        "paymentMethod": "CREDIT_CARD",
+        "product": {
+          "id": 789,
+          "name": "Plano Pro"
+        },
+        "createdAt": "2026-02-24T16:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 45,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+---
+
+## Buscar Assinatura por ID
+
+Obtenha os detalhes completos de uma assinatura específica.
+
+<Endpoint method="get" url="/api/subscriptions/{id}" />
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  ID da assinatura
+</ParamField>
+
+<RequestExample>
+
+```bash Buscar assinatura
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions/123" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "status": "ACTIVE",
+    "billingCycle": "MONTHLY",
+    "amount": 5000,
+    "nextBillingDate": "2026-03-24T15:30:00.000Z",
+    "trialEndsAt": null,
+    "startedAt": "2026-02-24T15:30:00.000Z",
+    "cancelledAt": null,
+    "customerEmail": "joao.santos@example.com",
+    "customerName": "João Silva Santos",
+    "customerDocument": "12345678900",
+    "customerPhone": "5511999999999",
+    "paymentMethod": "PIX",
+    "lastPaymentDate": "2026-02-24T15:30:00.000Z",
+    "lastPaymentStatus": "PAGO",
+    "totalBillings": 1,
+    "successfulBillings": 1,
+    "failedBillings": 0,
+    "product": {
+      "id": 456,
+      "name": "Assinatura Premium Mensal"
+    },
+    "metadata": {
+      "itemTitle": "Assinatura Premium Mensal",
+      "customerPhone": "5511999999999"
+    },
+    "createdAt": "2026-02-24T15:30:00.000Z",
+    "updatedAt": "2026-02-24T15:35:00.000Z"
+  }
+}
+```
+
+```json Error - 404 Not Found
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Assinatura não encontrada"
+  }
+}
+```
+
+</ResponseExample>
+
+---
+
+## Pausar Assinatura
+
+Pause temporariamente uma assinatura ativa. Nenhuma cobrança será processada enquanto pausada.
+
+<Endpoint method="post" url="/api/subscriptions/{id}/pause" />
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  ID da assinatura
+</ParamField>
+
+<RequestExample>
+
+```bash Pausar assinatura
+curl -X POST "https://api.imperiumpay.com.br/api/subscriptions/123/pause" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "success": true,
+  "message": "Assinatura pausada com sucesso",
+  "data": {
+    "id": 123,
+    "status": "PAUSED",
+    "pausedAt": "2026-02-24T18:00:00.000Z"
+  }
+}
+```
+
+```json Error - 400 Bad Request
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_STATUS",
+    "message": "Apenas assinaturas ativas podem ser pausadas"
+  }
+}
+```
+
+</ResponseExample>
+
+<Warning>
+  **Importante:** Apenas assinaturas com status `ACTIVE` ou `TRIALING` podem ser pausadas.
+</Warning>
+
+---
+
+## Reativar Assinatura
+
+Reative uma assinatura que foi pausada anteriormente.
+
+<Endpoint method="post" url="/api/subscriptions/{id}/resume" />
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  ID da assinatura
+</ParamField>
+
+<RequestExample>
+
+```bash Reativar assinatura
+curl -X POST "https://api.imperiumpay.com.br/api/subscriptions/123/resume" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "success": true,
+  "message": "Assinatura reativada com sucesso",
+  "data": {
+    "id": 123,
+    "status": "ACTIVE",
+    "nextBillingDate": "2026-03-24T15:30:00.000Z",
+    "resumedAt": "2026-02-25T10:00:00.000Z"
+  }
+}
+```
+
+```json Error - 400 Bad Request
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_STATUS",
+    "message": "Apenas assinaturas pausadas podem ser reativadas"
+  }
+}
+```
+
+</ResponseExample>
+
+<Info>
+  **Nota:** Ao reativar, a próxima data de cobrança é recalculada a partir da data de reativação.
+</Info>
+
+---
+
+## Cancelar Assinatura
+
+Cancele permanentemente uma assinatura. Esta ação não pode ser desfeita.
+
+<Endpoint method="post" url="/api/subscriptions/{id}/cancel" />
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  ID da assinatura
+</ParamField>
+
+### Body Parameters (Opcionais)
+
+<ParamField body="reason" type="string">
+  Motivo do cancelamento (para registro interno)
+</ParamField>
+
+<ParamField body="cancelImmediately" type="boolean">
+  Se `true`, cancela imediatamente. Se `false`, cancela ao final do período atual. Padrão: `true`
+</ParamField>
+
+<RequestExample>
+
+```bash Cancelar imediatamente
+curl -X POST "https://api.imperiumpay.com.br/api/subscriptions/123/cancel" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Solicitação do cliente",
+    "cancelImmediately": true
+  }'
+```
+
+```bash Cancelar ao final do período
+curl -X POST "https://api.imperiumpay.com.br/api/subscriptions/123/cancel" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Cliente optou por não renovar",
+    "cancelImmediately": false
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK (Cancelamento imediato)
+{
+  "success": true,
+  "message": "Assinatura cancelada com sucesso",
+  "data": {
+    "id": 123,
+    "status": "CANCELLED",
+    "cancelledAt": "2026-02-24T18:00:00.000Z",
+    "cancellationReason": "Solicitação do cliente"
+  }
+}
+```
+
+```json Success - 200 OK (Cancelamento ao final do período)
+{
+  "success": true,
+  "message": "Assinatura será cancelada ao final do período atual",
+  "data": {
+    "id": 123,
+    "status": "ACTIVE",
+    "scheduledCancellationDate": "2026-03-24T15:30:00.000Z",
+    "cancellationReason": "Cliente optou por não renovar"
+  }
+}
+```
+
+```json Error - 400 Bad Request
+{
+  "success": false,
+  "error": {
+    "code": "ALREADY_CANCELLED",
+    "message": "Esta assinatura já foi cancelada"
+  }
+}
+```
+
+</ResponseExample>
+
+<Warning>
+  **Atenção:** O cancelamento é uma ação permanente e não pode ser desfeita. Para suspender temporariamente uma assinatura, use a opção de pausar.
+</Warning>
+
+---
+
+## Obter Métricas
+
+Obtenha métricas SaaS das suas assinaturas (MRR, ARR, Churn Rate, etc.).
+
+<Endpoint method="get" url="/api/subscriptions/metrics" />
+
+<RequestExample>
+
+```bash Obter métricas
+curl -X GET "https://api.imperiumpay.com.br/api/subscriptions/metrics" \
+  -H "X-Api-Public-Key: sua_chave_publica_aqui" \
+  -H "X-Api-Private-Key: sua_chave_privada_aqui"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success - 200 OK
+{
+  "success": true,
+  "data": {
+    "total": 150,
+    "active": 120,
+    "cancelled": 25,
+    "paused": 5,
+    "mrr": 6000.00,
+    "arr": 72000.00,
+    "churnRate": 2.5
+  }
+}
+```
+
+</ResponseExample>
+
+### Campos das Métricas
+
+| Campo | Descrição |
+|-------|-----------|
+| `total` | Total de assinaturas criadas |
+| `active` | Assinaturas ativas (inclui `ACTIVE` e `TRIALING`) |
+| `cancelled` | Assinaturas canceladas |
+| `paused` | Assinaturas pausadas |
+| `mrr` | Monthly Recurring Revenue em R$ |
+| `arr` | Annual Recurring Revenue em R$ |
+| `churnRate` | Taxa de cancelamento em % |
+
+<Info>
+  **Nota:** Os valores de `mrr` e `arr` são retornados em **reais** (não em centavos).
+</Info>
+
+---
+
+## Códigos de Erro Comuns
+
+| Código HTTP | Código de Erro | Descrição |
+|-------------|----------------|-----------|
+| `400` | `INVALID_STATUS` | Operação não permitida para o status atual |
+| `400` | `ALREADY_CANCELLED` | Assinatura já foi cancelada |
+| `400` | `ALREADY_PAUSED` | Assinatura já está pausada |
+| `401` | `UNAUTHORIZED` | Chaves de API inválidas |
+| `403` | `FORBIDDEN` | Sem permissão para acessar esta assinatura |
+| `404` | `NOT_FOUND` | Assinatura não encontrada |
+| `500` | `INTERNAL_ERROR` | Erro interno do servidor |
